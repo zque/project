@@ -302,6 +302,8 @@ int main(void)
 									//波形有效值与漏电电流关系：		ADC测得电压=参考电压(3.3)/(ADC分辨率/2)*波形有效值
 									//								互感器电流=ADC测得电压/负载电阻(内部负载电阻为70欧）
 									//								漏电电流=互感器电流*1000(1000为互感器的线圈比1000：1）
+									
+			
 
 
   /* USER CODE END 2 */
@@ -344,6 +346,43 @@ int main(void)
 //									adc81[1]= HAL_ADC_GetValue(&hadc3);}
 //									//delay_ms(1);
 //								printf("%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\r\n",adc11[1],adc21[1],adc31[1],adc41[1],adc51[1],adc61[1],adc71[1],adc81[1]);
+
+									
+//********************************************************************led、BEEP测试*************************************************************//
+//		while(1){delay_ms(1000);
+//				HAL_GPIO_TogglePin(LED1_GPIO_Port,LED1_Pin);
+//				HAL_GPIO_TogglePin(LED2_GPIO_Port,LED2_Pin);
+//				HAL_GPIO_TogglePin(LED3_GPIO_Port,LED3_Pin);
+//				HAL_GPIO_TogglePin(LED4_GPIO_Port,LED4_Pin);
+//				HAL_GPIO_TogglePin(LED5_GPIO_Port,LED5_Pin);
+//				HAL_GPIO_TogglePin(LED6_GPIO_Port,LED6_Pin);
+//				HAL_GPIO_TogglePin(LED7_GPIO_Port,LED7_Pin);
+//				HAL_GPIO_TogglePin(LED8_GPIO_Port,LED8_Pin);
+//				HAL_GPIO_TogglePin(LED9_GPIO_Port,LED9_Pin);
+//				HAL_GPIO_TogglePin(LED10_GPIO_Port,LED10_Pin);
+//			
+//				HAL_GPIO_TogglePin(BEE_GPIO_Port,BEE_Pin);
+//				
+
+//			
+//		}
+
+//*******************************************************************继电器测试*************************************************//
+		
+//			HAL_GPIO_TogglePin(KM1_GPIO_Port,KM1_Pin);
+//			HAL_GPIO_TogglePin(KM2_GPIO_Port,KM2_Pin);
+//			HAL_GPIO_TogglePin(KM2_GPIO_Port,KM2_Pin);
+//			HAL_GPIO_TogglePin(KM3_GPIO_Port,KM3_Pin);
+//			HAL_GPIO_TogglePin(KM4_GPIO_Port,KM4_Pin);
+//			HAL_GPIO_TogglePin(KM5_GPIO_Port,KM5_Pin);
+//			HAL_GPIO_TogglePin(KM6_GPIO_Port,KM6_Pin);
+//			HAL_GPIO_TogglePin(KM7_GPIO_Port,KM7_Pin);
+//			HAL_GPIO_TogglePin(KM8_GPIO_Port,KM8_Pin);
+//			delay_ms(500);
+			
+
+			
+		
 	  
 	  
 	  
@@ -607,18 +646,63 @@ int main(void)
 //		if(sw)	{	printf("漏电电流1：%fmA\t",Imax11/355);printf("突变电流：%fmA\r\n",(Imax11-Imax10)/355);}
 //		else if(start) 
 //				{printf("漏电电流0：%fmA\t",Imax10/355);printf("突变电流：%fmA\r\n",(Imax10-Imax11)/355);}
+				
+//		if(sw)	{	printf("漏电电流1：%fmA\t%fmA\t%fmA\t%fmA\t%fmA\t%fmA\t%fmA\t%fmA\r\n",Imax11/355,Imax21/355,Imax31/355,Imax41/355,Imax51/355,Imax61/355,Imax71/355,Imax81/355);
+//					printf("突变电流：%fmA\t%fmA\t%fmA\t%fmA\t%fmA\t%fmA\t%fmA\t%fmA\r\n",(Imax11-Imax10)/355,(Imax21-Imax20)/355,(Imax31-Imax30)/355,(Imax41-Imax40)/355,(Imax51-Imax50)/355,(Imax61-Imax60)/355,(Imax71-Imax70)/355,(Imax81-Imax80)/355);}
+//		else if(start) 
+//				{	printf("漏电电流1：%fmA\t%fmA\t%fmA\t%fmA\t%fmA\t%fmA\t%fmA\t%fmA\r\n",Imax11/355,Imax21/355,Imax31/355,Imax41/355,Imax51/355,Imax61/355,Imax71/355,Imax81/355);
+//					printf("突变电流：%fmA\t%fmA\t%fmA\t%fmA\t%fmA\t%fmA\t%fmA\t%fmA\r\n",(Imax10-Imax11)/355,(Imax20-Imax21)/355,(Imax30-Imax31)/355,(Imax40-Imax41)/355,(Imax50-Imax51)/355,(Imax60-Imax61)/355,(Imax70-Imax71)/355,(Imax80-Imax81)/355);}
 //		
 //		if(har1){	printf("**************************频谱12************************\r\n");
 //					for(i=1;i<100;i++)printf("%f\t%f\r\n",output11[i],output10[i]);
 //				}
-		if(cos1&&har1)flag1=1;
-		if(cos2&&har2)flag2=1;		
-		if(cos3&&har3)flag3=1;		
-		if(cos4&&har4)flag4=1;		
-		if(cos5&&har5)flag5=1;		
-		if(cos6&&har6)flag6=1;		
-		if(cos7&&har7)flag7=1;		
-		if(cos8&&har8)flag8=1;		
+		if((cos1<0.9f)&&har1){	flag1=1;
+								printf("AT+CIPSEND=1,52,\"219.128.73.196\",20030\r\n");
+								delay_ms(200);
+								printf("漏电电流11：%05i\t漏电电流10：%05i\t突变电流1：%05i",(int)Imax11/355,(int)Imax10/355,(har1/355));
+								har1=0;}
+		if((cos2<0.9f)&&har2){	flag2=1;
+								printf("AT+CIPSEND=1,52,\"219.128.73.196\",20030");
+								delay_ms(200);
+								printf("漏电电流21：%05i\t漏电电流20：%05i\t突变电流2：%05i",(int)Imax21/355,(int)Imax20/355,har2/355);
+								har2=0;}
+									
+		if((cos3<0.9f)&&har3){	flag3=1;
+								printf("AT+CIPSEND=1,52,\"219.128.73.196\",20030");
+								delay_ms(200);
+								printf("漏电电流31：%05i\t漏电电流30：%05i\t突变电流3：%05i",(int)Imax31/355,(int)Imax30/355,har3/355);
+								har3=0;}
+		
+		if((cos4<0.9f)&&har4){	flag4=1;
+								printf("AT+CIPSEND=1,52,\"219.128.73.196\",20030");
+								delay_ms(100);
+								printf("漏电电流41：%05i\t漏电电流40：%05i\t突变电流4：%05i",(int)Imax41/355,(int)Imax40/355,har4/355);
+								har4=0;}
+							
+		if((cos5<0.9f)&&har5){	flag5=1;
+								printf("AT+CIPSEND=1,52,\"219.128.73.196\",20030");
+								delay_ms(100);
+								printf("漏电电流51：%05i\t漏电电流50：%05i\t突变电流5：%05i",(int)Imax51/355,(int)Imax50/355,har5/355);
+								har5=0;}
+							
+		if((cos6<0.9f)&&har6){	flag6=1;
+								printf("AT+CIPSEND=1,52,\"219.128.73.196\",20030");
+								delay_ms(100);
+								printf("漏电电流61：%05i\t漏电电流60：%05i\t突变电流6：%05i",(int)Imax61/355,(int)Imax60/355,har6/355);
+								har6=0;}
+								
+		if((cos7<0.9f)&&har7){	flag7=1;
+								printf("AT+CIPSEND=1,52,\"219.128.73.196\",20030");
+								delay_ms(100);
+								printf("漏电电流71：%05i\t漏电电流70：%05i\t突变电流7：%05i",(int)Imax71/355,(int)Imax70/355,har7/355);
+								har7=0;}
+								
+		if((cos8<0.9f)&&har8){	flag8=1;
+								printf("AT+CIPSEND=1,52,\"219.128.73.196\",20030");
+								delay_ms(100);
+								printf("漏电电流81：%05i\t漏电电流80：%05i\t突变电流8：%05i",(int)Imax81/355,(int)Imax80/355,har8/355);
+								har8=0;}
+									
 				
 				
 				
@@ -1103,7 +1187,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 		if((Uart1_RxBuff[Uart1_Rx_Cnt-1] == 0x0A)||(Uart1_RxBuff[Uart1_Rx_Cnt-2] == 0x0D)) //判断结束位
 		{
 			HAL_UART_Transmit(&huart3, (uint8_t *)&Uart1_RxBuff, Uart1_Rx_Cnt,0xFFFF);//将收到的信息发送出去
-			if((Uart1_RxBuff[Uart1_Rx_Cnt-3] == 0x45)||(Uart1_RxBuff[Uart1_Rx_Cnt-8] == 0x42))SET4G(); //判断接收到 PB DONE 初始化4g模块
+			if((Uart1_RxBuff[Uart1_Rx_Cnt-3] == 0x45)||(Uart1_RxBuff[Uart1_Rx_Cnt-8] == 0x42)); //判断接收到 PB DONE 初始化4g模块
+			if((Uart1_RxBuff[Uart1_Rx_Cnt-3] == 0x45)||(Uart1_RxBuff[Uart1_Rx_Cnt-8] == 0x42))SET4G();
 			Uart1_Rx_Cnt = 0;
 			memset(Uart1_RxBuff,0x00,sizeof(Uart1_RxBuff)); //清空数组
 		}
@@ -1113,18 +1198,23 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 }
 
 void SET4G(void){
-	delay_ms(5000);
+	delay_ms(300);
 	printf("AT+CGSOCKCONT=1,\"IP\",\"CMNET\"\r\n");
-	delay_ms(5000);
+	//printf("AT+CGSOCKCONT=1,\"IP\",\"CMNET\"\r\n");
+	delay_ms(300);
 	printf("AT+CSOCKSETPN=1\r\n");
-	delay_ms(4000);
+	//printf("AT+CSOCKSETPN=1\r\n");
+	delay_ms(300);
 	printf("AT+NETOPEN\r\n");
-	delay_ms(4000);
+	//printf("AT+NETOPEN\r\n");
+	delay_ms(300);
 	printf("AT+CIPOPEN=1,\"UDP\",,,20030\r\n");
-	delay_ms(3000);
-	printf("AT+CIPSEND=1,35,\"219.128.73.196\",20030\r\n");
-	delay_ms(2000);
-	printf("漏电电流1：00000\t突变电流1：000000");
+	delay_ms(300);
+	printf("AT+CIPSEND=1,33,\"219.128.73.196\",20030\r\n");
+	delay_ms(300);
+	printf("漏电电流1：00000\t突变电流1：00000\r\n");
+	HAL_GPIO_TogglePin(BEE_GPIO_Port,BEE_Pin);
+	delay_ms(1000);
 	HAL_GPIO_TogglePin(BEE_GPIO_Port,BEE_Pin);
 	
 }
@@ -1137,62 +1227,61 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 						if(flag1){	HAL_GPIO_TogglePin(LED3_GPIO_Port,LED3_Pin);
 									HAL_GPIO_WritePin(KM1_GPIO_Port,KM1_Pin,GPIO_PIN_SET);
 									HAL_GPIO_TogglePin(BEE_GPIO_Port,BEE_Pin);
-									printf("AT+CIPSEND=1,35,\"219.128.73.196\",20030\r\n");
-									printf("漏电电流1：%05i\t突变电流1：%05i",(int)Imax11/355,(har1/355));}
+									}
 						
 						if(flag2){	HAL_GPIO_TogglePin(LED4_GPIO_Port,LED4_Pin);
 									HAL_GPIO_WritePin(KM2_GPIO_Port,KM2_Pin,GPIO_PIN_SET);
 									HAL_GPIO_TogglePin(BEE_GPIO_Port,BEE_Pin);
-									printf("AT+CIPSEND=1,35,\"219.128.73.196\",20030");
-									printf("漏电电流2%05i\t突变电流2：%05i",(int)Imax21/355,har2/355);}
+									
+									}
 									
 						if(flag3){	HAL_GPIO_TogglePin(LED5_GPIO_Port,LED5_Pin);
 									HAL_GPIO_WritePin(KM3_GPIO_Port,KM3_Pin,GPIO_PIN_SET);
 									HAL_GPIO_TogglePin(BEE_GPIO_Port,BEE_Pin);
-									printf("AT+CIPSEND=1,35,\"219.128.73.196\",20030");
-									printf("漏电电流3：%05i\t突变电流3：%05i",(int)Imax31/355,har3/355);}
+									
+									}
 									
 						if(flag4){	HAL_GPIO_TogglePin(LED6_GPIO_Port,LED6_Pin);
 									HAL_GPIO_WritePin(KM4_GPIO_Port,KM4_Pin,GPIO_PIN_SET);
 									HAL_GPIO_TogglePin(BEE_GPIO_Port,BEE_Pin);
-									printf("AT+CIPSEND=1,35,\"219.128.73.196\",20030");
-									printf("漏电电流4：%05i\t突变电流4：%05i",(int)Imax41/355,har4/355);}
+									
+									}
 									
 						if(flag5){	HAL_GPIO_TogglePin(LED7_GPIO_Port,LED7_Pin);
 									HAL_GPIO_WritePin(KM5_GPIO_Port,KM5_Pin,GPIO_PIN_SET);
 									HAL_GPIO_TogglePin(BEE_GPIO_Port,BEE_Pin);
-									printf("AT+CIPSEND=1,35,\"219.128.73.196\",20030");
-									printf("漏电电流5：%05i\t突变电流5：%05i",(int)Imax51/355,har5/355);}
+									
+									}
 									
 						if(flag6){	HAL_GPIO_TogglePin(LED8_GPIO_Port,LED8_Pin);
 									HAL_GPIO_WritePin(KM6_GPIO_Port,KM6_Pin,GPIO_PIN_SET);
 									HAL_GPIO_TogglePin(BEE_GPIO_Port,BEE_Pin);
-									printf("AT+CIPSEND=1,35,\"219.128.73.196\",20030");
-									printf("漏电电流6：%05i\t突变电流6：%05i",(int)Imax61/355,har6/355);}
+									
+									}
 									
 						if(flag7){	HAL_GPIO_TogglePin(LED9_GPIO_Port,LED9_Pin);
 									HAL_GPIO_WritePin(KM7_GPIO_Port,KM7_Pin,GPIO_PIN_SET);
 									HAL_GPIO_TogglePin(BEE_GPIO_Port,BEE_Pin);
-									printf("AT+CIPSEND=1,35,\"219.128.73.196\",20030");
-									printf("漏电电流7：%05i\t突变电流7：%05i",(int)Imax71/355,har7/355);}
+									
+									}
 									
 						if(flag8){	HAL_GPIO_TogglePin(LED10_GPIO_Port,LED10_Pin);
 									HAL_GPIO_WritePin(KM8_GPIO_Port,KM8_Pin,GPIO_PIN_SET);
 									HAL_GPIO_TogglePin(BEE_GPIO_Port,BEE_Pin);
-									printf("AT+CIPSEND=1,35,\"219.128.73.196\",20030");
-									printf("漏电电流8：%05i\t突变电流8：%05i",(int)Imax81/355,har8/355);}
+									
+									}
 									
 						}
 	
 	
-	if(HAL_GPIO_ReadPin(K1_GPIO_Port,K1_Pin)){flag1=0;har1=0;HAL_GPIO_WritePin(KM1_GPIO_Port,KM1_Pin,GPIO_PIN_RESET);}
-	if(HAL_GPIO_ReadPin(K2_GPIO_Port,K2_Pin)){flag2=0;har2=0;HAL_GPIO_WritePin(KM1_GPIO_Port,KM1_Pin,GPIO_PIN_RESET);}					
-	if(HAL_GPIO_ReadPin(K3_GPIO_Port,K3_Pin)){flag3=0;har3=0;HAL_GPIO_WritePin(KM1_GPIO_Port,KM1_Pin,GPIO_PIN_RESET);}
-	if(HAL_GPIO_ReadPin(K4_GPIO_Port,K4_Pin)){flag4=0;har4=0;HAL_GPIO_WritePin(KM1_GPIO_Port,KM1_Pin,GPIO_PIN_RESET);}					
-	if(HAL_GPIO_ReadPin(K5_GPIO_Port,K5_Pin)){flag5=0;har5=0;HAL_GPIO_WritePin(KM1_GPIO_Port,KM1_Pin,GPIO_PIN_RESET);}					
-	if(HAL_GPIO_ReadPin(K6_GPIO_Port,K6_Pin)){flag6=0;har6=0;HAL_GPIO_WritePin(KM1_GPIO_Port,KM1_Pin,GPIO_PIN_RESET);}					
-	if(HAL_GPIO_ReadPin(K7_GPIO_Port,K7_Pin)){flag7=0;har7=0;HAL_GPIO_WritePin(KM1_GPIO_Port,KM1_Pin,GPIO_PIN_RESET);}					
-	if(HAL_GPIO_ReadPin(K8_GPIO_Port,K8_Pin)){flag8=0;har8=0;HAL_GPIO_WritePin(KM1_GPIO_Port,KM1_Pin,GPIO_PIN_RESET);}					
+	if(HAL_GPIO_ReadPin(K1_GPIO_Port,K1_Pin)){flag1=0;HAL_GPIO_WritePin(KM1_GPIO_Port,KM1_Pin,GPIO_PIN_RESET);}
+	if(HAL_GPIO_ReadPin(K2_GPIO_Port,K2_Pin)){flag2=0;HAL_GPIO_WritePin(KM1_GPIO_Port,KM1_Pin,GPIO_PIN_RESET);}					
+	if(HAL_GPIO_ReadPin(K3_GPIO_Port,K3_Pin)){flag3=0;HAL_GPIO_WritePin(KM1_GPIO_Port,KM1_Pin,GPIO_PIN_RESET);}
+	if(HAL_GPIO_ReadPin(K4_GPIO_Port,K4_Pin)){flag4=0;HAL_GPIO_WritePin(KM1_GPIO_Port,KM1_Pin,GPIO_PIN_RESET);}					
+	if(HAL_GPIO_ReadPin(K5_GPIO_Port,K5_Pin)){flag5=0;HAL_GPIO_WritePin(KM1_GPIO_Port,KM1_Pin,GPIO_PIN_RESET);}					
+	if(HAL_GPIO_ReadPin(K6_GPIO_Port,K6_Pin)){flag6=0;HAL_GPIO_WritePin(KM1_GPIO_Port,KM1_Pin,GPIO_PIN_RESET);}					
+	if(HAL_GPIO_ReadPin(K7_GPIO_Port,K7_Pin)){flag7=0;HAL_GPIO_WritePin(KM1_GPIO_Port,KM1_Pin,GPIO_PIN_RESET);}					
+	if(HAL_GPIO_ReadPin(K8_GPIO_Port,K8_Pin)){flag8=0;HAL_GPIO_WritePin(KM1_GPIO_Port,KM1_Pin,GPIO_PIN_RESET);}					
 }
 
 /* USER CODE END 4 */
