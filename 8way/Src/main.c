@@ -47,6 +47,7 @@
 #include "delay.h"
 #include "arm_math.h"
 #define FFT_LENGTH 		1024
+#define bee				HAL_GPIO_To
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -63,7 +64,7 @@ UART_HandleTypeDef huart3;
 /* Private variables ---------------------------------------------------------*/
 int i=0;							//for循环变量
 int j=0;							//for循环变量
-int limit =300;						//设置报警突变电流
+int limit =70;						//设置报警突变电流
 int sw=0;							//切换前后波形数据控制变量		
 int count=0;
 float amp_value=0.0;				//限制漏电电流转换为幅值有效值
@@ -72,11 +73,19 @@ float B=0.0;
 float AB=0.0;
 float cos2=0.0;//互相关系数平方
 int zero = 33220;
-int done4g =0;  //4g初始化完成标志
+int reset4G =0;  //4g数据 接收超时重置标志
+int connect_confirm =0; //定时发送消息确保连接
+int alarm_message = 0;
+int time_out=0;
 
-uint8_t aRxBuffer;			//接收中断缓冲
-uint8_t Uart1_RxBuff[256];		//接收缓冲
-uint8_t Uart1_Rx_Cnt = 0;		//接收缓冲计数
+
+uint8_t aRxBuffer2;			//接收中断缓冲
+uint8_t Uart2_RxBuff[256];		//接收缓冲
+uint8_t Uart2_Rx_Cnt = 0;		//接收缓冲计数
+
+uint8_t aRxBuffer3;			//接收中断缓冲
+uint8_t Uart3_RxBuff[256];		//接收缓冲
+uint8_t Uart3_Rx_Cnt = 0;		//接收缓冲计数
 uint8_t	cAlmStr[] = "数据溢出(大于256)\r\n";
 								
 
@@ -293,7 +302,8 @@ int main(void)
  // HAL_TIM_Base_Start_IT(&htim1);
   delay_init(400);
   //HAL_GPIO_WritePin(RE_GPIO_Port,RE_Pin,GPIO_PIN_SET);
-  HAL_UART_Receive_IT(&huart2, (uint8_t *)&aRxBuffer, 1);
+  HAL_UART_Receive_IT(&huart2, (uint8_t *)&aRxBuffer2,1);
+  HAL_UART_Receive_IT(&huart3, (uint8_t *)&aRxBuffer3, 1);
   HAL_TIM_Base_Start_IT(&htim1);
   arm_cfft_radix4_init_f32(&scfft,FFT_LENGTH,0,1);
   delay_ms(1000);
@@ -643,9 +653,9 @@ int main(void)
 						if((Imax70-Imax71)>amp_value)har7=(int)(Imax70-Imax71);
 						if((Imax80-Imax81)>amp_value)har8=(int)(Imax80-Imax81);}}
 	
-//		if(sw)	{	printf("漏电电流1：%fmA\t",Imax11/355);printf("突变电流：%fmA\r\n",(Imax11-Imax10)/355);}
-//		else if(start) 
-//				{printf("漏电电流0：%fmA\t",Imax10/355);printf("突变电流：%fmA\r\n",(Imax10-Imax11)/355);}
+		if(sw)	{	printf("漏电电流1：%fmA\t",Imax11/355);printf("突变电流：%fmA\r\n",(Imax11-Imax10)/355);}
+		else if(start) 
+				{printf("漏电电流0：%fmA\t",Imax10/355);printf("突变电流：%fmA\r\n",(Imax10-Imax11)/355);}
 				
 //		if(sw)	{	printf("漏电电流1：%fmA\t%fmA\t%fmA\t%fmA\t%fmA\t%fmA\t%fmA\t%fmA\r\n",Imax11/355,Imax21/355,Imax31/355,Imax41/355,Imax51/355,Imax61/355,Imax71/355,Imax81/355);
 //					printf("突变电流：%fmA\t%fmA\t%fmA\t%fmA\t%fmA\t%fmA\t%fmA\t%fmA\r\n",(Imax11-Imax10)/355,(Imax21-Imax20)/355,(Imax31-Imax30)/355,(Imax41-Imax40)/355,(Imax51-Imax50)/355,(Imax61-Imax60)/355,(Imax71-Imax70)/355,(Imax81-Imax80)/355);}
@@ -662,52 +672,58 @@ int main(void)
 								printf("漏电电流11：%05i\t漏电电流10：%05i\t突变电流1：%05i",(int)Imax11/355,(int)Imax10/355,(har1/355));
 								har1=0;}
 		if((cos2<0.9f)&&har2){	flag2=1;
-								printf("AT+CIPSEND=1,52,\"219.128.73.196\",20030");
+								printf("AT+CIPSEND=1,52,\"219.128.73.196\",20030\r\n");
 								delay_ms(200);
 								printf("漏电电流21：%05i\t漏电电流20：%05i\t突变电流2：%05i",(int)Imax21/355,(int)Imax20/355,har2/355);
 								har2=0;}
 									
 		if((cos3<0.9f)&&har3){	flag3=1;
-								printf("AT+CIPSEND=1,52,\"219.128.73.196\",20030");
+								printf("AT+CIPSEND=1,52,\"219.128.73.196\",20030\r\n");
 								delay_ms(200);
 								printf("漏电电流31：%05i\t漏电电流30：%05i\t突变电流3：%05i",(int)Imax31/355,(int)Imax30/355,har3/355);
 								har3=0;}
 		
 		if((cos4<0.9f)&&har4){	flag4=1;
-								printf("AT+CIPSEND=1,52,\"219.128.73.196\",20030");
+								printf("AT+CIPSEND=1,52,\"219.128.73.196\",20030\r\n");
 								delay_ms(100);
 								printf("漏电电流41：%05i\t漏电电流40：%05i\t突变电流4：%05i",(int)Imax41/355,(int)Imax40/355,har4/355);
 								har4=0;}
 							
 		if((cos5<0.9f)&&har5){	flag5=1;
-								printf("AT+CIPSEND=1,52,\"219.128.73.196\",20030");
+								printf("AT+CIPSEND=1,52,\"219.128.73.196\",20030\r\n");
 								delay_ms(100);
 								printf("漏电电流51：%05i\t漏电电流50：%05i\t突变电流5：%05i",(int)Imax51/355,(int)Imax50/355,har5/355);
 								har5=0;}
 							
 		if((cos6<0.9f)&&har6){	flag6=1;
-								printf("AT+CIPSEND=1,52,\"219.128.73.196\",20030");
+								printf("AT+CIPSEND=1,52,\"219.128.73.196\",20030\r\n");
 								delay_ms(100);
 								printf("漏电电流61：%05i\t漏电电流60：%05i\t突变电流6：%05i",(int)Imax61/355,(int)Imax60/355,har6/355);
 								har6=0;}
 								
 		if((cos7<0.9f)&&har7){	flag7=1;
-								printf("AT+CIPSEND=1,52,\"219.128.73.196\",20030");
+								printf("AT+CIPSEND=1,52,\"219.128.73.196\",20030\r\n");
 								delay_ms(100);
 								printf("漏电电流71：%05i\t漏电电流70：%05i\t突变电流7：%05i",(int)Imax71/355,(int)Imax70/355,har7/355);
 								har7=0;}
 								
 		if((cos8<0.9f)&&har8){	flag8=1;
-								printf("AT+CIPSEND=1,52,\"219.128.73.196\",20030");
+								printf("AT+CIPSEND=1,52,\"219.128.73.196\",20030\r\n");
 								delay_ms(100);
 								printf("漏电电流81：%05i\t漏电电流80：%05i\t突变电流8：%05i",(int)Imax81/355,(int)Imax80/355,har8/355);
 								har8=0;}
-									
+												
+		if(connect_confirm >30){printf("AT+CIPSEND=1,15,\"219.128.73.196\",20030\r\n");										//30秒发送一次数据
+								delay_ms(100);
+								printf("%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i",flag1,flag2,flag3,flag4,flag5,flag6,flag7,flag8);
+								connect_confirm=0;}
+		if(time_out>120){//HAL_GPIO_WritePin(RE_GPIO_Port,RE_Pin,GPIO_PIN_SET);												//超时（120秒）时重置4G模块
+						delay_ms(100);
+						SET4G();
+						//HAL_GPIO_WritePin(RE_GPIO_Port,RE_Pin,GPIO_PIN_RESET);
+						time_out=0;}		
 				
-				
-				
-				
-	
+		
 		start=1;
 	} 
   /* USER CODE END 3 */
@@ -1141,8 +1157,8 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin : RE_Pin */
   GPIO_InitStruct.Pin = RE_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(RE_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : LED8_Pin LED9_Pin LED10_Pin LED3_Pin 
@@ -1173,57 +1189,74 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
   /* NOTE: This function Should not be modified, when the callback is needed,
            the HAL_UART_TxCpltCallback could be implemented in the user file
    */
- 
-	if(Uart1_Rx_Cnt >= 255)  //溢出判断
-	{
-		Uart1_Rx_Cnt = 0;
-		memset(Uart1_RxBuff,0x00,sizeof(Uart1_RxBuff));
-		HAL_UART_Transmit(&huart2, (uint8_t *)&cAlmStr, sizeof(cAlmStr),0xFFFF);	
-	}
-	else
-	{
-		Uart1_RxBuff[Uart1_Rx_Cnt++] = aRxBuffer;   //接收数据转存
-	
-		if((Uart1_RxBuff[Uart1_Rx_Cnt-1] == 0x0A)||(Uart1_RxBuff[Uart1_Rx_Cnt-2] == 0x0D)) //判断结束位
-		{
-			HAL_UART_Transmit(&huart3, (uint8_t *)&Uart1_RxBuff, Uart1_Rx_Cnt,0xFFFF);//将收到的信息发送出去
-			if((Uart1_RxBuff[Uart1_Rx_Cnt-3] == 0x45)||(Uart1_RxBuff[Uart1_Rx_Cnt-8] == 0x42)); //判断接收到 PB DONE 初始化4g模块
-			if((Uart1_RxBuff[Uart1_Rx_Cnt-3] == 0x45)||(Uart1_RxBuff[Uart1_Rx_Cnt-8] == 0x42))SET4G();
-			Uart1_Rx_Cnt = 0;
-			memset(Uart1_RxBuff,0x00,sizeof(Uart1_RxBuff)); //清空数组
-		}
-	}
-	
-	HAL_UART_Receive_IT(&huart2, (uint8_t *)&aRxBuffer, 1);   //再开启接收中断
+	if(huart->Instance == USART2){	if(Uart2_Rx_Cnt >= 255){
+										Uart2_Rx_Cnt = 0;
+										memset(Uart2_RxBuff,0x00,sizeof(Uart2_RxBuff));
+										HAL_UART_Transmit(&huart2, (uint8_t *)&cAlmStr, sizeof(cAlmStr),0xFFFF);}
+									else{
+										Uart2_RxBuff[Uart2_Rx_Cnt++] = aRxBuffer2;   //接收数据转存
+										if(aRxBuffer2==0x06)	time_out=0;
+										if((Uart2_RxBuff[Uart2_Rx_Cnt-1] == 0x0A)&&(Uart2_RxBuff[Uart2_Rx_Cnt-2] == 0x0D)) //判断结束位
+										{	
+//											HAL_GPIO_WritePin(RE_GPIO_Port,RE_Pin,GPIO_PIN_SET);
+//											HAL_UART_Transmit(&huart3, (uint8_t *)&Uart2_RxBuff, Uart2_Rx_Cnt,0xFFFF);//将串口2收到的信息发送到485串口
+//											HAL_GPIO_WritePin(RE_GPIO_Port,RE_Pin,GPIO_PIN_RESET);
+											if((Uart2_RxBuff[0] == 0x50)||(Uart2_RxBuff[1] == 0x42))SET4G();// 判断接收的消息为 PB DONE 时初始化4G模块
+											Uart2_Rx_Cnt = 0;
+											memset(Uart2_RxBuff,0x00,sizeof(Uart2_RxBuff)); //清空数组
+										}
+									}
+
+									HAL_UART_Receive_IT(&huart2, (uint8_t *)&aRxBuffer2, 1);}   //再开启接收中断
+//	if(huart->Instance == USART3){if(Uart3_Rx_Cnt >= 255)  //溢出判断
+//									{
+//										Uart3_Rx_Cnt = 0;
+//										memset(Uart3_RxBuff,0x00,sizeof(Uart3_RxBuff));
+//										HAL_UART_Transmit(&huart2, (uint8_t *)&cAlmStr, sizeof(cAlmStr),0xFFFF);	
+//									}
+//									else
+//									{
+//										Uart3_RxBuff[Uart3_Rx_Cnt++] = aRxBuffer3;   //接收数据转存
+//										if((Uart3_RxBuff[Uart3_Rx_Cnt-1] == 0x0A)&&(Uart3_RxBuff[Uart3_Rx_Cnt-2] == 0x0D)) //判断结束位
+//										{
+//											HAL_UART_Transmit(&huart2, (uint8_t *)&Uart3_RxBuff, Uart3_Rx_Cnt,0xFFFF);//将485串口收到的信息发送到串口2
+//											Uart3_Rx_Cnt = 0;
+//											memset(Uart3_RxBuff,0x00,sizeof(Uart3_RxBuff)); //清空数组
+//										}
+//									}
+
+//									HAL_UART_Receive_IT(&huart2, (uint8_t *)&aRxBuffer3, 1);}
+		
+		
+							
 }
 
 void SET4G(void){
 	delay_ms(300);
 	printf("AT+CGSOCKCONT=1,\"IP\",\"CMNET\"\r\n");
-	//printf("AT+CGSOCKCONT=1,\"IP\",\"CMNET\"\r\n");
 	delay_ms(300);
 	printf("AT+CSOCKSETPN=1\r\n");
-	//printf("AT+CSOCKSETPN=1\r\n");
 	delay_ms(300);
 	printf("AT+NETOPEN\r\n");
-	//printf("AT+NETOPEN\r\n");
 	delay_ms(300);
 	printf("AT+CIPOPEN=1,\"UDP\",,,20030\r\n");
 	delay_ms(300);
-	printf("AT+CIPSEND=1,33,\"219.128.73.196\",20030\r\n");
+	printf("AT+CIPSEND=1,18,\"219.128.73.196\",20030\r\n");
 	delay_ms(300);
-	printf("漏电电流1：00000\t突变电流1：00000\r\n");
+	printf("4G模块初始化完成\r\n");
 	HAL_GPIO_TogglePin(BEE_GPIO_Port,BEE_Pin);
 	delay_ms(1000);
 	HAL_GPIO_TogglePin(BEE_GPIO_Port,BEE_Pin);
 	
 }
-
+ 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	
 	tim_count++;
 	if(tim_count==1000){HAL_GPIO_TogglePin(LED2_GPIO_Port,LED2_Pin);tim_count=0;
+						time_out++;
+						connect_confirm++;
 						if(flag1){	HAL_GPIO_TogglePin(LED3_GPIO_Port,LED3_Pin);
 									HAL_GPIO_WritePin(KM1_GPIO_Port,KM1_Pin,GPIO_PIN_SET);
 									HAL_GPIO_TogglePin(BEE_GPIO_Port,BEE_Pin);
