@@ -53,6 +53,8 @@
 #define LED1_GPIO_Port GPIOE
 #define LED2_Pin GPIO_PIN_3
 #define LED2_GPIO_Port GPIOE
+#define reset_4G_Pin GPIO_PIN_4
+#define reset_4G_GPIO_Port GPIOE
 #define K1_Pin GPIO_PIN_3
 #define K1_GPIO_Port GPIOH
 #define K2_Pin GPIO_PIN_4

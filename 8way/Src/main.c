@@ -64,7 +64,8 @@ UART_HandleTypeDef huart3;
 /* Private variables ---------------------------------------------------------*/
 int i=0;							//for循环变量
 int j=0;							//for循环变量
-int limit =70;						//设置报警突变电流
+int k=0;							//for循环变量
+int limit =100   ;						//设置报警突变电流
 int sw=0;							//切换前后波形数据控制变量		
 int count=0;
 float amp_value=0.0;				//限制漏电电流转换为幅值有效值
@@ -93,6 +94,9 @@ int tim_count=0;
 int start=0;						//第一次执行main函数 只采集了一个波形不做比较，用于第一次跳过比较
 arm_cfft_radix4_instance_f32 scfft;
 //**********************************************ADC**********************//
+int filter11[5],filter21[5],filter31[5],filter41[5],filter51[5],filter61[5],filter71[5],filter81[5];
+int filter10[5],filter20[5],filter30[5],filter40[5],filter50[5],filter60[5],filter70[5],filter80[5];
+
 int adc11[1030];//原始波形		ADC:1	通道2
 int adc21[1030];//原始波形		ADC:1	通道3
 int adc31[1030];//原始波形		ADC:1	通道4
@@ -112,6 +116,7 @@ int adc50[1030];//原始波形		ADC:2	通道2
 int adc60[1030];//原始波形		ADC:3	通道1
 int adc70[1030];//原始波形		ADC:3	通道2
 int adc80[1030];//原始波形		ADC:3	通道3
+
 
 
 //********************************************滑动平均*******************//
@@ -252,6 +257,7 @@ static void MX_TIM1_Init(void);
 
 /* USER CODE BEGIN 0 */
 void SET4G(void);
+void sort(int* a,int len);
 
 /* USER CODE END 0 */
 
@@ -399,68 +405,167 @@ int main(void)
 	  
 	  
 		sw=!sw;
-		
-//***************************************ADC采样*************************************************//		
-		if(sw){	for(i=0;i<1030;i++){for(j=0;j<4;j++){HAL_ADC_Start(&hadc1);
-									HAL_ADC_PollForConversion(&hadc1,0xffff);
-									adc11[i]= HAL_ADC_GetValue(&hadc1);
-									HAL_ADC_Start(&hadc1);
-									HAL_ADC_PollForConversion(&hadc1,0xffff);
-									adc21[i]= HAL_ADC_GetValue(&hadc1);
-									HAL_ADC_Start(&hadc1);
-									HAL_ADC_PollForConversion(&hadc1,0xffff);
-									adc31[i]= HAL_ADC_GetValue(&hadc1);
-									HAL_ADC_Start(&hadc1);
-									HAL_ADC_PollForConversion(&hadc1,0xffff);
-									adc41[i]= HAL_ADC_GetValue(&hadc1);}
-					
-									HAL_ADC_Start(&hadc2);
-									HAL_ADC_PollForConversion(&hadc2,0xffff);
-									adc51[i]= HAL_ADC_GetValue(&hadc2);
+		//***************************************ADC采样*************************************************//		
+		if(sw){	for(i=0;i<1030;i++){for(k=0;k<5;k++){HAL_ADC_Start(&hadc1);
+																								HAL_ADC_PollForConversion(&hadc1,0xffff);
+																								filter11[k]= HAL_ADC_GetValue(&hadc1);
+																								HAL_ADC_Start(&hadc1);
+																								HAL_ADC_PollForConversion(&hadc1,0xffff);
+																								filter21[k]= HAL_ADC_GetValue(&hadc1);
+																								HAL_ADC_Start(&hadc1);
+																								HAL_ADC_PollForConversion(&hadc1,0xffff);
+																								filter31[k]= HAL_ADC_GetValue(&hadc1);
+																								HAL_ADC_Start(&hadc1);
+																								HAL_ADC_PollForConversion(&hadc1,0xffff);
+																								filter41[k]= HAL_ADC_GetValue(&hadc1);
+													
+																								HAL_ADC_Start(&hadc2);
+																								HAL_ADC_PollForConversion(&hadc2,0xffff);
+																								filter51[k]= HAL_ADC_GetValue(&hadc2);
+																
+																								HAL_ADC_Start(&hadc3);
+																								HAL_ADC_PollForConversion(&hadc3,0xffff);
+																								filter61[k]= HAL_ADC_GetValue(&hadc3);
+																								HAL_ADC_Start(&hadc3);	
+																								HAL_ADC_PollForConversion(&hadc3,0xffff);
+																								filter71[k]= HAL_ADC_GetValue(&hadc3);
+																								HAL_ADC_Start(&hadc3);	
+																								HAL_ADC_PollForConversion(&hadc3,0xffff);
+																								filter81[k]= HAL_ADC_GetValue(&hadc3);}
+																//printf("**********1***********\r\n");
+																sort(filter11,5);
+																sort(filter21,5);								
+																sort(filter31,5);								
+																sort(filter41,5);								
+																sort(filter51,5);								
+																sort(filter61,5);								
+																sort(filter71,5);								
+																sort(filter81,5);
+																adc11[i]=filter11[2];
+																adc21[i]=filter21[2];									
+																adc31[i]=filter31[2];								
+																adc41[i]=filter41[2];								
+																adc51[i]=filter51[2];								
+																adc61[i]=filter61[2];								
+																adc71[i]=filter71[2];								
+																adc81[i]=filter81[2];
+																delay_us(40);
+				}}
+		else{for(i=0;i<1030;i++){for(k=0;k<5;k++){HAL_ADC_Start(&hadc1);
+																							HAL_ADC_PollForConversion(&hadc1,0xffff);
+																							filter10[k]= HAL_ADC_GetValue(&hadc1);
+																							HAL_ADC_Start(&hadc1);
+																							HAL_ADC_PollForConversion(&hadc1,0xffff);
+																							filter20[k]= HAL_ADC_GetValue(&hadc1);
+																							HAL_ADC_Start(&hadc1);
+																							HAL_ADC_PollForConversion(&hadc1,0xffff);
+																							filter30[k]= HAL_ADC_GetValue(&hadc1);
+																							HAL_ADC_Start(&hadc1);
+																							HAL_ADC_PollForConversion(&hadc1,0xffff);
+																							filter40[k]= HAL_ADC_GetValue(&hadc1);
 									
-									for(j=0;j<3;j++){HAL_ADC_Start(&hadc3);
-									HAL_ADC_PollForConversion(&hadc3,0xffff);
-									adc61[i]= HAL_ADC_GetValue(&hadc3);
-									HAL_ADC_Start(&hadc3);	
-									HAL_ADC_PollForConversion(&hadc3,0xffff);
-									adc71[i]= HAL_ADC_GetValue(&hadc3);
-									HAL_ADC_Start(&hadc3);	
-									HAL_ADC_PollForConversion(&hadc3,0xffff);
-									adc81[i]= HAL_ADC_GetValue(&hadc3);}
-									delay_us(150);}}
-		else{for(i=0;i<1030;i++){for(j=0;j<4;j++){HAL_ADC_Start(&hadc1);
-									HAL_ADC_PollForConversion(&hadc1,0xffff);
-									adc10[i]= HAL_ADC_GetValue(&hadc1);
-									HAL_ADC_Start(&hadc1);
-									HAL_ADC_PollForConversion(&hadc1,0xffff);
-									adc20[i]= HAL_ADC_GetValue(&hadc1);
-									HAL_ADC_Start(&hadc1);
-									HAL_ADC_PollForConversion(&hadc1,0xffff);
-									adc30[i]= HAL_ADC_GetValue(&hadc1);
-									HAL_ADC_Start(&hadc1);
-									HAL_ADC_PollForConversion(&hadc1,0xffff);
-									adc40[i]= HAL_ADC_GetValue(&hadc1);}
+																							HAL_ADC_Start(&hadc2);
+																							HAL_ADC_PollForConversion(&hadc2,0xffff);
+																							filter50[k]= HAL_ADC_GetValue(&hadc2);
 									
-									HAL_ADC_Start(&hadc2);
-									HAL_ADC_PollForConversion(&hadc2,0xffff);
-									adc50[i]= HAL_ADC_GetValue(&hadc2);
-									
-									for(j=0;j<3;j++){HAL_ADC_Start(&hadc3);
-									HAL_ADC_PollForConversion(&hadc3,0xffff);
-									adc60[i]= HAL_ADC_GetValue(&hadc3);
-									HAL_ADC_Start(&hadc3);
-									HAL_ADC_PollForConversion(&hadc3,0xffff);
-									adc70[i]= HAL_ADC_GetValue(&hadc3);
-									HAL_ADC_Start(&hadc3);
-									HAL_ADC_PollForConversion(&hadc3,0xffff);
-									adc80[i]= HAL_ADC_GetValue(&hadc3);}	
-									delay_us(150);
-									}}
+																							HAL_ADC_Start(&hadc3);
+																							HAL_ADC_PollForConversion(&hadc3,0xffff);
+																							filter60[k]= HAL_ADC_GetValue(&hadc3);
+																							HAL_ADC_Start(&hadc3);
+																							HAL_ADC_PollForConversion(&hadc3,0xffff);
+																							filter70[k]= HAL_ADC_GetValue(&hadc3);
+																							HAL_ADC_Start(&hadc3);
+																							HAL_ADC_PollForConversion(&hadc3,0xffff);
+																							filter80[k]= HAL_ADC_GetValue(&hadc3);}
+
+																sort(filter10,5);
+																sort(filter20,5);								
+																sort(filter30,5);								
+																sort(filter40,5);								
+																sort(filter50,5);								
+																sort(filter60,5);								
+																sort(filter70,5);								
+																sort(filter80,5);
+																adc10[i]=filter10[2];
+																adc20[i]=filter20[2];									
+																adc30[i]=filter30[2];								
+																adc40[i]=filter40[2];								
+																adc50[i]=filter50[2];								
+																adc60[i]=filter60[2];								
+																adc70[i]=filter70[2];								
+																adc80[i]=filter80[2];	
+																delay_us(40);
+			}}
 		
 //									if(sw){	printf("*****************片段1*********************");   //测试采集到的adc数据
 //											for(i=0;i<1024;i++){printf("%i\r\n",adc11[i]);}}	
 //									else{	printf("*****************片段0*********************");
 //											for(i=0;i<1024;i++){printf("%i\r\n",adc10[i]);}}
+									
+									
+									
+//		
+////***************************************ADC采样*************************************************//		
+//		if(sw){	for(i=0;i<1030;i++){HAL_ADC_Start(&hadc1);
+//																HAL_ADC_PollForConversion(&hadc1,0xffff);
+//																adc11[i]= HAL_ADC_GetValue(&hadc1);
+//																HAL_ADC_Start(&hadc1);
+//																HAL_ADC_PollForConversion(&hadc1,0xffff);
+//																adc21[i]= HAL_ADC_GetValue(&hadc1);
+//																HAL_ADC_Start(&hadc1);
+//																HAL_ADC_PollForConversion(&hadc1,0xffff);
+//																adc31[i]= HAL_ADC_GetValue(&hadc1);
+//																HAL_ADC_Start(&hadc1);
+//																HAL_ADC_PollForConversion(&hadc1,0xffff);
+//																adc41[i]= HAL_ADC_GetValue(&hadc1);
+//					
+							//									HAL_ADC_Start(&hadc2);
+							//									HAL_ADC_PollForConversion(&hadc2,0xffff);
+							//									adc51[i]= HAL_ADC_GetValue(&hadc2);
+							//									
+							//									HAL_ADC_Start(&hadc3);
+							//									HAL_ADC_PollForConversion(&hadc3,0xffff);
+							//									adc61[i]= HAL_ADC_GetValue(&hadc3);
+							//									HAL_ADC_Start(&hadc3);	
+							//									HAL_ADC_PollForConversion(&hadc3,0xffff);
+							//									adc71[i]= HAL_ADC_GetValue(&hadc3);
+							//									HAL_ADC_Start(&hadc3);	
+							//									HAL_ADC_PollForConversion(&hadc3,0xffff);
+							//									adc81[i]= HAL_ADC_GetValue(&hadc3);
+//																delay_us(150);}}
+//		else{for(i=0;i<1030;i++){HAL_ADC_Start(&hadc1);
+						//									HAL_ADC_PollForConversion(&hadc1,0xffff);
+						//									adc10[i]= HAL_ADC_GetValue(&hadc1);
+						//									HAL_ADC_Start(&hadc1);
+						//									HAL_ADC_PollForConversion(&hadc1,0xffff);
+						//									adc20[i]= HAL_ADC_GetValue(&hadc1);
+						//									HAL_ADC_Start(&hadc1);
+						//									HAL_ADC_PollForConversion(&hadc1,0xffff);
+						//									adc30[i]= HAL_ADC_GetValue(&hadc1);
+						//									HAL_ADC_Start(&hadc1);
+						//									HAL_ADC_PollForConversion(&hadc1,0xffff);
+						//									adc40[i]= HAL_ADC_GetValue(&hadc1);
+						//									
+						//									HAL_ADC_Start(&hadc2);
+						//									HAL_ADC_PollForConversion(&hadc2,0xffff);
+						//									adc50[i]= HAL_ADC_GetValue(&hadc2);
+						//									
+						//									HAL_ADC_Start(&hadc3);
+						//									HAL_ADC_PollForConversion(&hadc3,0xffff);
+						//									adc60[i]= HAL_ADC_GetValue(&hadc3);
+						//									HAL_ADC_Start(&hadc3);
+						//									HAL_ADC_PollForConversion(&hadc3,0xffff);
+						//									adc70[i]= HAL_ADC_GetValue(&hadc3);
+						//									HAL_ADC_Start(&hadc3);
+						//									HAL_ADC_PollForConversion(&hadc3,0xffff);
+						//									adc80[i]= HAL_ADC_GetValue(&hadc3);
+//															delay_us(150);
+//									}}
+//		
+////									if(sw){	printf("*****************片段1*********************");   //测试采集到的adc数据
+////											for(i=0;i<1024;i++){printf("%i\r\n",adc11[i]);}}	
+////									else{	printf("*****************片段0*********************");
+////											for(i=0;i<1024;i++){printf("%i\r\n",adc10[i]);}}
 									
 									
 				
@@ -640,7 +745,7 @@ int main(void)
 						if((Imax31-Imax30)>amp_value)har3=(int)(Imax31-Imax30);
 						if((Imax41-Imax40)>amp_value)har4=(int)(Imax41-Imax40);
 						if((Imax51-Imax50)>amp_value)har5=(int)(Imax51-Imax50);
-						if((Imax61-Imax60)>amp_value)har6=(int)(Imax61-Imax60);	
+						if((Imax61-Imax60)>(amp_value+8000))har6=(int)(Imax61-Imax60);	
 						if((Imax71-Imax70)>amp_value)har7=(int)(Imax71-Imax70);
 						if((Imax81-Imax80)>amp_value)har8=(int)(Imax81-Imax80);}
 					else{	
@@ -649,13 +754,16 @@ int main(void)
 						if((Imax30-Imax31)>amp_value)har3=(int)(Imax30-Imax31);
 						if((Imax40-Imax41)>amp_value)har4=(int)(Imax40-Imax41);
 						if((Imax50-Imax51)>amp_value)har5=(int)(Imax50-Imax51);
-						if((Imax60-Imax61)>amp_value)har6=(int)(Imax60-Imax61);	
+						if((Imax60-Imax61)>(amp_value+8000))har6=(int)(Imax60-Imax61);	
 						if((Imax70-Imax71)>amp_value)har7=(int)(Imax70-Imax71);
 						if((Imax80-Imax81)>amp_value)har8=(int)(Imax80-Imax81);}}
 	
-		if(sw)	{	printf("漏电电流1：%fmA\t",Imax11/355);printf("突变电流：%fmA\r\n",(Imax11-Imax10)/355);}
-		else if(start) 
-				{printf("漏电电流0：%fmA\t",Imax10/355);printf("突变电流：%fmA\r\n",(Imax10-Imax11)/355);}
+//		if(sw)	{	printf("漏电电流1：%fmA\t",Imax11/355);printf("突变电流：%fmA\r\n",(Imax11-Imax10)/355);}
+//		else if(start) 
+//				{printf("漏电电流0：%fmA\t",Imax10/355);printf("突变电流：%fmA\r\n",(Imax10-Imax11)/355);}
+				
+		
+			if(sw){printf("%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\r\n",Imax11/355,Imax21/355,Imax31/355,Imax41/355,Imax51/355,Imax61/355,Imax71/355,Imax81/355);}
 				
 //		if(sw)	{	printf("漏电电流1：%fmA\t%fmA\t%fmA\t%fmA\t%fmA\t%fmA\t%fmA\t%fmA\r\n",Imax11/355,Imax21/355,Imax31/355,Imax41/355,Imax51/355,Imax61/355,Imax71/355,Imax81/355);
 //					printf("突变电流：%fmA\t%fmA\t%fmA\t%fmA\t%fmA\t%fmA\t%fmA\t%fmA\r\n",(Imax11-Imax10)/355,(Imax21-Imax20)/355,(Imax31-Imax30)/355,(Imax41-Imax40)/355,(Imax51-Imax50)/355,(Imax61-Imax60)/355,(Imax71-Imax70)/355,(Imax81-Imax80)/355);}
@@ -668,18 +776,18 @@ int main(void)
 //				}
 		if((cos1<0.9f)&&har1){	flag1=1;
 								printf("AT+CIPSEND=1,52,\"219.128.73.196\",20030\r\n");
-								delay_ms(200);
+								delay_ms(100);
 								printf("漏电电流11：%05i\t漏电电流10：%05i\t突变电流1：%05i",(int)Imax11/355,(int)Imax10/355,(har1/355));
 								har1=0;}
 		if((cos2<0.9f)&&har2){	flag2=1;
 								printf("AT+CIPSEND=1,52,\"219.128.73.196\",20030\r\n");
-								delay_ms(200);
+								delay_ms(100);
 								printf("漏电电流21：%05i\t漏电电流20：%05i\t突变电流2：%05i",(int)Imax21/355,(int)Imax20/355,har2/355);
 								har2=0;}
 									
 		if((cos3<0.9f)&&har3){	flag3=1;
 								printf("AT+CIPSEND=1,52,\"219.128.73.196\",20030\r\n");
-								delay_ms(200);
+								delay_ms(100);
 								printf("漏电电流31：%05i\t漏电电流30：%05i\t突变电流3：%05i",(int)Imax31/355,(int)Imax30/355,har3/355);
 								har3=0;}
 		
@@ -712,6 +820,9 @@ int main(void)
 								delay_ms(100);
 								printf("漏电电流81：%05i\t漏电电流80：%05i\t突变电流8：%05i",(int)Imax81/355,(int)Imax80/355,har8/355);
 								har8=0;}
+		
+								
+								
 												
 		if(connect_confirm >30){printf("AT+CIPSEND=1,15,\"219.128.73.196\",20030\r\n");										//30秒发送一次数据
 								delay_ms(100);
@@ -719,6 +830,9 @@ int main(void)
 								connect_confirm=0;}
 		if(time_out>120){//HAL_GPIO_WritePin(RE_GPIO_Port,RE_Pin,GPIO_PIN_SET);												//超时（120秒）时重置4G模块
 						delay_ms(100);
+						HAL_GPIO_WritePin(reset_4G_GPIO_Port,reset_4G_Pin,GPIO_PIN_SET);
+						delay_ms(100);
+						HAL_GPIO_WritePin(reset_4G_GPIO_Port,reset_4G_Pin,GPIO_PIN_RESET);
 						SET4G();
 						//HAL_GPIO_WritePin(RE_GPIO_Port,RE_Pin,GPIO_PIN_RESET);
 						time_out=0;}		
@@ -1119,7 +1233,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOI_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOE, LED1_Pin|LED2_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOE, LED1_Pin|LED2_Pin|reset_4G_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOH, BEE_Pin|RE_Pin, GPIO_PIN_RESET);
@@ -1132,8 +1246,8 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOI, KM1_Pin|KM2_Pin|KM3_Pin|KM4_Pin 
                           |KM5_Pin|KM6_Pin|KM7_Pin|KM8_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : LED1_Pin LED2_Pin */
-  GPIO_InitStruct.Pin = LED1_Pin|LED2_Pin;
+  /*Configure GPIO pins : LED1_Pin LED2_Pin reset_4G_Pin */
+  GPIO_InitStruct.Pin = LED1_Pin|LED2_Pin|reset_4G_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -1230,6 +1344,29 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 		
 							
 }
+//******************************************排序************************************//
+void sort(int* a,int len)
+{
+    int begin = 1;
+    int i = 0;
+    while(begin < len)
+    {
+        int key = a[begin];
+        for(i = begin-1;i>=0;i--)
+        {
+            if(a[i]<=key)    
+            {
+                a[i+1] = key;
+                break;
+            }
+            a[i+1] = a[i];
+        }
+        if(i<0)
+            a[0] = key;
+        begin++;
+    }
+}
+
 
 void SET4G(void){
 	delay_ms(300);
@@ -1244,9 +1381,9 @@ void SET4G(void){
 	printf("AT+CIPSEND=1,18,\"219.128.73.196\",20030\r\n");
 	delay_ms(300);
 	printf("4G模块初始化完成\r\n");
-	HAL_GPIO_TogglePin(BEE_GPIO_Port,BEE_Pin);
-	delay_ms(1000);
-	HAL_GPIO_TogglePin(BEE_GPIO_Port,BEE_Pin);
+//	HAL_GPIO_TogglePin(BEE_GPIO_Port,BEE_Pin);
+//	delay_ms(1000);
+//	HAL_GPIO_TogglePin(BEE_GPIO_Port,BEE_Pin);
 	
 }
  
