@@ -57,10 +57,10 @@
 #define reset_4G_GPIO_Port GPIOE
 #define K1_Pin GPIO_PIN_3
 #define K1_GPIO_Port GPIOH
-#define K2_Pin GPIO_PIN_4
-#define K2_GPIO_Port GPIOH
-#define K3_Pin GPIO_PIN_5
+#define K3_Pin GPIO_PIN_4
 #define K3_GPIO_Port GPIOH
+#define K2_Pin GPIO_PIN_5
+#define K2_GPIO_Port GPIOH
 #define K4_Pin GPIO_PIN_6
 #define K4_GPIO_Port GPIOH
 #define K5_Pin GPIO_PIN_7

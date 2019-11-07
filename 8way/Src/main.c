@@ -65,7 +65,7 @@ UART_HandleTypeDef huart3;
 int i=0;							//for循环变量
 int j=0;							//for循环变量
 int k=0;							//for循环变量
-int limit =100   ;						//设置报警突变电流
+int limit =100  ;						//设置报警突变电流
 int sw=0;							//切换前后波形数据控制变量		
 int count=0;
 float amp_value=0.0;				//限制漏电电流转换为幅值有效值
@@ -78,6 +78,16 @@ int reset4G =0;  //4g数据 接收超时重置标志
 int connect_confirm =0; //定时发送消息确保连接
 int alarm_message = 0;
 int time_out=0;
+int filter_len=5;
+int filter_A =1;
+int filter_index = 0;
+int beep_flag=0;
+uint8_t input_read ;
+
+//struct {
+//	int K1_Pin:1;
+//	
+//}sw_input;
 
 
 uint8_t aRxBuffer2;			//接收中断缓冲
@@ -258,6 +268,7 @@ static void MX_TIM1_Init(void);
 /* USER CODE BEGIN 0 */
 void SET4G(void);
 void sort(int* a,int len);
+void filter(int* a,int* b);
 
 /* USER CODE END 0 */
 
@@ -313,6 +324,7 @@ int main(void)
   HAL_TIM_Base_Start_IT(&htim1);
   arm_cfft_radix4_init_f32(&scfft,FFT_LENGTH,0,1);
   delay_ms(1000);
+	filter_index = filter_len/2;
   amp_value=(355*limit);			//限制漏电电流转换为波形有效幅值
 									//频谱幅值与波形有效值关系： 		波形有效值=频谱幅值*2/FFT_LEANGTH
 									//波形有效值与漏电电流关系：		ADC测得电压=参考电压(3.3)/(ADC分辨率/2)*波形有效值
@@ -321,7 +333,7 @@ int main(void)
 									
 			
 
-
+	input_read = (GPIOH->IDR-->2)&0x0F;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -386,16 +398,24 @@ int main(void)
 //*******************************************************************继电器测试*************************************************//
 		
 //			HAL_GPIO_TogglePin(KM1_GPIO_Port,KM1_Pin);
+//		delay_ms(1000);
 //			HAL_GPIO_TogglePin(KM2_GPIO_Port,KM2_Pin);
+//		delay_ms(1000);
 //			HAL_GPIO_TogglePin(KM2_GPIO_Port,KM2_Pin);
+//		delay_ms(1000);
 //			HAL_GPIO_TogglePin(KM3_GPIO_Port,KM3_Pin);
+//		delay_ms(1000);
 //			HAL_GPIO_TogglePin(KM4_GPIO_Port,KM4_Pin);
+//		delay_ms(1000);
 //			HAL_GPIO_TogglePin(KM5_GPIO_Port,KM5_Pin);
+//		delay_ms(1000);
 //			HAL_GPIO_TogglePin(KM6_GPIO_Port,KM6_Pin);
+//		delay_ms(1000);
 //			HAL_GPIO_TogglePin(KM7_GPIO_Port,KM7_Pin);
+//		delay_ms(1000);
 //			HAL_GPIO_TogglePin(KM8_GPIO_Port,KM8_Pin);
-//			delay_ms(500);
-			
+//			delay_ms(10000);
+//			
 
 			
 		
@@ -406,7 +426,7 @@ int main(void)
 	  
 		sw=!sw;
 		//***************************************ADC采样*************************************************//		
-		if(sw){	for(i=0;i<1030;i++){for(k=0;k<5;k++){HAL_ADC_Start(&hadc1);
+		if(sw){	for(i=0;i<1030;i++){for(k=0;k<filter_len;k++){HAL_ADC_Start(&hadc1);
 																								HAL_ADC_PollForConversion(&hadc1,0xffff);
 																								filter11[k]= HAL_ADC_GetValue(&hadc1);
 																								HAL_ADC_Start(&hadc1);
@@ -433,25 +453,25 @@ int main(void)
 																								HAL_ADC_PollForConversion(&hadc3,0xffff);
 																								filter81[k]= HAL_ADC_GetValue(&hadc3);}
 																//printf("**********1***********\r\n");
-																sort(filter11,5);
-																sort(filter21,5);								
-																sort(filter31,5);								
-																sort(filter41,5);								
-																sort(filter51,5);								
-																sort(filter61,5);								
-																sort(filter71,5);								
-																sort(filter81,5);
-																adc11[i]=filter11[2];
-																adc21[i]=filter21[2];									
-																adc31[i]=filter31[2];								
-																adc41[i]=filter41[2];								
-																adc51[i]=filter51[2];								
-																adc61[i]=filter61[2];								
-																adc71[i]=filter71[2];								
-																adc81[i]=filter81[2];
-																delay_us(40);
+																sort(filter11,filter_len);
+																sort(filter21,filter_len);								
+																sort(filter31,filter_len);								
+																sort(filter41,filter_len);								
+																sort(filter51,filter_len);								
+																sort(filter61,filter_len);								
+																sort(filter71,filter_len);								
+																sort(filter81,filter_len);
+																adc11[i]=filter11[filter_index];
+																adc21[i]=filter21[filter_index];									
+																adc31[i]=filter31[filter_index];								
+																adc41[i]=filter41[filter_index];								
+																adc51[i]=filter51[filter_index];								
+																adc61[i]=filter61[filter_index];								
+																adc71[i]=filter71[filter_index];								
+																adc81[i]=filter81[filter_index];
+																delay_us(20);
 				}}
-		else{for(i=0;i<1030;i++){for(k=0;k<5;k++){HAL_ADC_Start(&hadc1);
+		else{for(i=0;i<1030;i++){for(k=0;k<filter_len;k++){HAL_ADC_Start(&hadc1);
 																							HAL_ADC_PollForConversion(&hadc1,0xffff);
 																							filter10[k]= HAL_ADC_GetValue(&hadc1);
 																							HAL_ADC_Start(&hadc1);
@@ -478,101 +498,100 @@ int main(void)
 																							HAL_ADC_PollForConversion(&hadc3,0xffff);
 																							filter80[k]= HAL_ADC_GetValue(&hadc3);}
 
-																sort(filter10,5);
-																sort(filter20,5);								
-																sort(filter30,5);								
-																sort(filter40,5);								
-																sort(filter50,5);								
-																sort(filter60,5);								
-																sort(filter70,5);								
-																sort(filter80,5);
-																adc10[i]=filter10[2];
-																adc20[i]=filter20[2];									
-																adc30[i]=filter30[2];								
-																adc40[i]=filter40[2];								
-																adc50[i]=filter50[2];								
-																adc60[i]=filter60[2];								
-																adc70[i]=filter70[2];								
-																adc80[i]=filter80[2];	
-																delay_us(40);
+																sort(filter10,filter_len);
+																sort(filter20,filter_len);								
+																sort(filter30,filter_len);								
+																sort(filter40,filter_len);								
+																sort(filter50,filter_len);								
+																sort(filter60,filter_len);								
+																sort(filter70,filter_len);								
+																sort(filter80,filter_len);
+																adc10[i]=filter10[filter_index];
+																adc20[i]=filter20[filter_index];									
+																adc30[i]=filter30[filter_index];								
+																adc40[i]=filter40[filter_index];								
+																adc50[i]=filter50[filter_index];								
+																adc60[i]=filter60[filter_index];								
+																adc70[i]=filter70[filter_index];								
+																adc80[i]=filter80[filter_index];	
+																delay_us(20);
 			}}
 		
-//									if(sw){	printf("*****************片段1*********************");   //测试采集到的adc数据
-//											for(i=0;i<1024;i++){printf("%i\r\n",adc11[i]);}}	
+			
+       if(sw){printf("%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\r\n",Imax11/355,Imax21/355,Imax31/355,Imax41/355,Imax51/355,Imax61/355,Imax71/355,Imax81/355);}			
+									if(sw){	printf("*****************片段1*********************");   //测试采集到的adc数据
+											for(i=0;i<1024;i++){printf("%i\r\n",adc71[i]);}}	
 //									else{	printf("*****************片段0*********************");
 //											for(i=0;i<1024;i++){printf("%i\r\n",adc10[i]);}}
 									
+											
+		if(sw){	for(i=0;i<1030;i++){for(j=0;j<4;j++){HAL_ADC_Start(&hadc1);
+									HAL_ADC_PollForConversion(&hadc1,0xffff);
+									adc11[i]= HAL_ADC_GetValue(&hadc1);
+									HAL_ADC_Start(&hadc1);
+									HAL_ADC_PollForConversion(&hadc1,0xffff);
+									adc21[i]= HAL_ADC_GetValue(&hadc1);
+									HAL_ADC_Start(&hadc1);
+									HAL_ADC_PollForConversion(&hadc1,0xffff);
+									adc31[i]= HAL_ADC_GetValue(&hadc1);
+									HAL_ADC_Start(&hadc1);
+									HAL_ADC_PollForConversion(&hadc1,0xffff);
+									adc41[i]= HAL_ADC_GetValue(&hadc1);}
+					
+									HAL_ADC_Start(&hadc2);
+									HAL_ADC_PollForConversion(&hadc2,0xffff);
+									adc51[i]= HAL_ADC_GetValue(&hadc2);
 									
+									for(j=0;j<3;j++){HAL_ADC_Start(&hadc3);
+									HAL_ADC_PollForConversion(&hadc3,0xffff);
+									adc61[i]= HAL_ADC_GetValue(&hadc3);
+									HAL_ADC_Start(&hadc3);	
+									HAL_ADC_PollForConversion(&hadc3,0xffff);
+									adc71[i]= HAL_ADC_GetValue(&hadc3);
+									HAL_ADC_Start(&hadc3);	
+									HAL_ADC_PollForConversion(&hadc3,0xffff);
+									adc81[i]= HAL_ADC_GetValue(&hadc3);}
+									delay_us(150);}
+		
+						filter(adc11,avg11);
+				}
+		else{for(i=0;i<1030;i++){HAL_ADC_Start(&hadc1);
+									HAL_ADC_PollForConversion(&hadc1,0xffff);
+									adc10[i]= HAL_ADC_GetValue(&hadc1);
+									HAL_ADC_Start(&hadc1);
+									HAL_ADC_PollForConversion(&hadc1,0xffff);
+									adc20[i]= HAL_ADC_GetValue(&hadc1);
+									HAL_ADC_Start(&hadc1);
+									HAL_ADC_PollForConversion(&hadc1,0xffff);
+									adc30[i]= HAL_ADC_GetValue(&hadc1);
+									HAL_ADC_Start(&hadc1);
+									HAL_ADC_PollForConversion(&hadc1,0xffff);
+									adc40[i]= HAL_ADC_GetValue(&hadc1);
 									
-//		
-////***************************************ADC采样*************************************************//		
-//		if(sw){	for(i=0;i<1030;i++){HAL_ADC_Start(&hadc1);
-//																HAL_ADC_PollForConversion(&hadc1,0xffff);
-//																adc11[i]= HAL_ADC_GetValue(&hadc1);
-//																HAL_ADC_Start(&hadc1);
-//																HAL_ADC_PollForConversion(&hadc1,0xffff);
-//																adc21[i]= HAL_ADC_GetValue(&hadc1);
-//																HAL_ADC_Start(&hadc1);
-//																HAL_ADC_PollForConversion(&hadc1,0xffff);
-//																adc31[i]= HAL_ADC_GetValue(&hadc1);
-//																HAL_ADC_Start(&hadc1);
-//																HAL_ADC_PollForConversion(&hadc1,0xffff);
-//																adc41[i]= HAL_ADC_GetValue(&hadc1);
-//					
-							//									HAL_ADC_Start(&hadc2);
-							//									HAL_ADC_PollForConversion(&hadc2,0xffff);
-							//									adc51[i]= HAL_ADC_GetValue(&hadc2);
-							//									
-							//									HAL_ADC_Start(&hadc3);
-							//									HAL_ADC_PollForConversion(&hadc3,0xffff);
-							//									adc61[i]= HAL_ADC_GetValue(&hadc3);
-							//									HAL_ADC_Start(&hadc3);	
-							//									HAL_ADC_PollForConversion(&hadc3,0xffff);
-							//									adc71[i]= HAL_ADC_GetValue(&hadc3);
-							//									HAL_ADC_Start(&hadc3);	
-							//									HAL_ADC_PollForConversion(&hadc3,0xffff);
-							//									adc81[i]= HAL_ADC_GetValue(&hadc3);
-//																delay_us(150);}}
-//		else{for(i=0;i<1030;i++){HAL_ADC_Start(&hadc1);
-						//									HAL_ADC_PollForConversion(&hadc1,0xffff);
-						//									adc10[i]= HAL_ADC_GetValue(&hadc1);
-						//									HAL_ADC_Start(&hadc1);
-						//									HAL_ADC_PollForConversion(&hadc1,0xffff);
-						//									adc20[i]= HAL_ADC_GetValue(&hadc1);
-						//									HAL_ADC_Start(&hadc1);
-						//									HAL_ADC_PollForConversion(&hadc1,0xffff);
-						//									adc30[i]= HAL_ADC_GetValue(&hadc1);
-						//									HAL_ADC_Start(&hadc1);
-						//									HAL_ADC_PollForConversion(&hadc1,0xffff);
-						//									adc40[i]= HAL_ADC_GetValue(&hadc1);
-						//									
-						//									HAL_ADC_Start(&hadc2);
-						//									HAL_ADC_PollForConversion(&hadc2,0xffff);
-						//									adc50[i]= HAL_ADC_GetValue(&hadc2);
-						//									
-						//									HAL_ADC_Start(&hadc3);
-						//									HAL_ADC_PollForConversion(&hadc3,0xffff);
-						//									adc60[i]= HAL_ADC_GetValue(&hadc3);
-						//									HAL_ADC_Start(&hadc3);
-						//									HAL_ADC_PollForConversion(&hadc3,0xffff);
-						//									adc70[i]= HAL_ADC_GetValue(&hadc3);
-						//									HAL_ADC_Start(&hadc3);
-						//									HAL_ADC_PollForConversion(&hadc3,0xffff);
-						//									adc80[i]= HAL_ADC_GetValue(&hadc3);
-//															delay_us(150);
-//									}}
-//		
-////									if(sw){	printf("*****************片段1*********************");   //测试采集到的adc数据
-////											for(i=0;i<1024;i++){printf("%i\r\n",adc11[i]);}}	
-////									else{	printf("*****************片段0*********************");
-////											for(i=0;i<1024;i++){printf("%i\r\n",adc10[i]);}}
+									HAL_ADC_Start(&hadc2);
+									HAL_ADC_PollForConversion(&hadc2,0xffff);
+									adc50[i]= HAL_ADC_GetValue(&hadc2);
 									
-									
+									HAL_ADC_Start(&hadc3);
+									HAL_ADC_PollForConversion(&hadc3,0xffff);
+									adc60[i]= HAL_ADC_GetValue(&hadc3);
+									HAL_ADC_Start(&hadc3);
+									HAL_ADC_PollForConversion(&hadc3,0xffff);
+									adc70[i]= HAL_ADC_GetValue(&hadc3);
+									HAL_ADC_Start(&hadc3);
+									HAL_ADC_PollForConversion(&hadc3,0xffff);
+									adc80[i]= HAL_ADC_GetValue(&hadc3);	
+									delay_us(150);
+									}}
+		
+							
 				
 									
-//****************************************************adc取滑动平均并放入input数组*********************************************************//																	
+//****************************************************adc取滑动平均并放入input数组*********************************************************//		
+
+
 		if(sw){	for(i=0;i<1024;i++){input11[2*i]=avg11[i]=(adc11[i]+adc11[i+1]+adc11[i+2]+adc11[i+3]+adc11[i+4])/5.0;	input11[2*i+1]=0;
-									input21[2*i]=avg21[i]=(adc21[i]+adc21[i+1]+adc21[i+2]+adc21[i+3]+adc21[i+4])/5.0;	input21[2*i+1]=0;
+									input21[2*i]=avg21[i];input21[2*i+1]=0;//=(adc21[i]+adc21[i+1]+adc21[i+2]+adc21[i+3]+adc21[i+4])/5.0;	
 									input31[2*i]=avg31[i]=(adc31[i]+adc31[i+1]+adc31[i+2]+adc31[i+3]+adc31[i+4])/5.0;	input31[2*i+1]=0;
 									input41[2*i]=avg41[i]=(adc41[i]+adc41[i+1]+adc41[i+2]+adc41[i+3]+adc41[i+4])/5.0;	input41[2*i+1]=0;
 									input51[2*i]=avg51[i]=(adc51[i]+adc51[i+1]+adc51[i+2]+adc51[i+3]+adc51[i+4])/5.0;	input51[2*i+1]=0;
@@ -745,7 +764,7 @@ int main(void)
 						if((Imax31-Imax30)>amp_value)har3=(int)(Imax31-Imax30);
 						if((Imax41-Imax40)>amp_value)har4=(int)(Imax41-Imax40);
 						if((Imax51-Imax50)>amp_value)har5=(int)(Imax51-Imax50);
-						if((Imax61-Imax60)>(amp_value+8000))har6=(int)(Imax61-Imax60);	
+						if((Imax61-Imax60)>amp_value)har6=(int)(Imax61-Imax60);	
 						if((Imax71-Imax70)>amp_value)har7=(int)(Imax71-Imax70);
 						if((Imax81-Imax80)>amp_value)har8=(int)(Imax81-Imax80);}
 					else{	
@@ -754,16 +773,16 @@ int main(void)
 						if((Imax30-Imax31)>amp_value)har3=(int)(Imax30-Imax31);
 						if((Imax40-Imax41)>amp_value)har4=(int)(Imax40-Imax41);
 						if((Imax50-Imax51)>amp_value)har5=(int)(Imax50-Imax51);
-						if((Imax60-Imax61)>(amp_value+8000))har6=(int)(Imax60-Imax61);	
+						if((Imax60-Imax61)>amp_value)har6=(int)(Imax60-Imax61);	
 						if((Imax70-Imax71)>amp_value)har7=(int)(Imax70-Imax71);
 						if((Imax80-Imax81)>amp_value)har8=(int)(Imax80-Imax81);}}
 	
 //		if(sw)	{	printf("漏电电流1：%fmA\t",Imax11/355);printf("突变电流：%fmA\r\n",(Imax11-Imax10)/355);}
 //		else if(start) 
 //				{printf("漏电电流0：%fmA\t",Imax10/355);printf("突变电流：%fmA\r\n",(Imax10-Imax11)/355);}
-				
+//				printf("%i\r\n",(int)HAL_GPIO_ReadPin(K1_GPIO_Port,K1_Pin));
 		
-			if(sw){printf("%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\r\n",Imax11/355,Imax21/355,Imax31/355,Imax41/355,Imax51/355,Imax61/355,Imax71/355,Imax81/355);}
+//		if(sw){printf("%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\r\n",Imax11/355,Imax21/355,Imax31/355,Imax41/355,Imax51/355,Imax61/355,Imax71/355,Imax81/355);}
 				
 //		if(sw)	{	printf("漏电电流1：%fmA\t%fmA\t%fmA\t%fmA\t%fmA\t%fmA\t%fmA\t%fmA\r\n",Imax11/355,Imax21/355,Imax31/355,Imax41/355,Imax51/355,Imax61/355,Imax71/355,Imax81/355);
 //					printf("突变电流：%fmA\t%fmA\t%fmA\t%fmA\t%fmA\t%fmA\t%fmA\t%fmA\r\n",(Imax11-Imax10)/355,(Imax21-Imax20)/355,(Imax31-Imax30)/355,(Imax41-Imax40)/355,(Imax51-Imax50)/355,(Imax61-Imax60)/355,(Imax71-Imax70)/355,(Imax81-Imax80)/355);}
@@ -774,7 +793,7 @@ int main(void)
 //		if(har1){	printf("**************************频谱12************************\r\n");
 //					for(i=1;i<100;i++)printf("%f\t%f\r\n",output11[i],output10[i]);
 //				}
-		if((cos1<0.9f)&&har1){	flag1=1;
+		if((cos1<0.95f)&&har1){	flag1=1;
 								printf("AT+CIPSEND=1,52,\"219.128.73.196\",20030\r\n");
 								delay_ms(100);
 								printf("漏电电流11：%05i\t漏电电流10：%05i\t突变电流1：%05i",(int)Imax11/355,(int)Imax10/355,(har1/355));
@@ -836,6 +855,9 @@ int main(void)
 						SET4G();
 						//HAL_GPIO_WritePin(RE_GPIO_Port,RE_Pin,GPIO_PIN_RESET);
 						time_out=0;}		
+					
+						
+						
 				
 		
 		start=1;
@@ -1253,12 +1275,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : K1_Pin K2_Pin K3_Pin K4_Pin 
+  /*Configure GPIO pins : K1_Pin K3_Pin K2_Pin K4_Pin 
                            K5_Pin K6_Pin K7_Pin K8_Pin */
-  GPIO_InitStruct.Pin = K1_Pin|K2_Pin|K3_Pin|K4_Pin 
+  GPIO_InitStruct.Pin = K1_Pin|K3_Pin|K2_Pin|K4_Pin 
                           |K5_Pin|K6_Pin|K7_Pin|K8_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOH, &GPIO_InitStruct);
 
   /*Configure GPIO pin : BEE_Pin */
@@ -1344,6 +1366,15 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 		
 							
 }
+
+//********************************************限幅***************************************//
+void filter(int* a,int* b) {
+		for(i=0;i<1024;i++){
+				while(1){if(((a[i] - a[i+1]) > filter_A) || ((a[i+1] - a[i]) > filter_A)){b[i]=a[i];break;}
+									else i+=1;}
+		}
+}
+ 
 //******************************************排序************************************//
 void sort(int* a,int len)
 {
@@ -1381,9 +1412,9 @@ void SET4G(void){
 	printf("AT+CIPSEND=1,18,\"219.128.73.196\",20030\r\n");
 	delay_ms(300);
 	printf("4G模块初始化完成\r\n");
-//	HAL_GPIO_TogglePin(BEE_GPIO_Port,BEE_Pin);
-//	delay_ms(1000);
-//	HAL_GPIO_TogglePin(BEE_GPIO_Port,BEE_Pin);
+	HAL_GPIO_TogglePin(BEE_GPIO_Port,BEE_Pin);
+	delay_ms(1000);
+	HAL_GPIO_TogglePin(BEE_GPIO_Port,BEE_Pin);
 	
 }
  
@@ -1396,62 +1427,78 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 						connect_confirm++;
 						if(flag1){	HAL_GPIO_TogglePin(LED3_GPIO_Port,LED3_Pin);
 									HAL_GPIO_WritePin(KM1_GPIO_Port,KM1_Pin,GPIO_PIN_SET);
-									HAL_GPIO_TogglePin(BEE_GPIO_Port,BEE_Pin);
+									beep_flag=1;
 									}
 						
 						if(flag2){	HAL_GPIO_TogglePin(LED4_GPIO_Port,LED4_Pin);
 									HAL_GPIO_WritePin(KM2_GPIO_Port,KM2_Pin,GPIO_PIN_SET);
-									HAL_GPIO_TogglePin(BEE_GPIO_Port,BEE_Pin);
+									beep_flag=1;
 									
 									}
 									
 						if(flag3){	HAL_GPIO_TogglePin(LED5_GPIO_Port,LED5_Pin);
 									HAL_GPIO_WritePin(KM3_GPIO_Port,KM3_Pin,GPIO_PIN_SET);
-									HAL_GPIO_TogglePin(BEE_GPIO_Port,BEE_Pin);
+									beep_flag=1;
 									
 									}
 									
 						if(flag4){	HAL_GPIO_TogglePin(LED6_GPIO_Port,LED6_Pin);
 									HAL_GPIO_WritePin(KM4_GPIO_Port,KM4_Pin,GPIO_PIN_SET);
-									HAL_GPIO_TogglePin(BEE_GPIO_Port,BEE_Pin);
+									beep_flag=1;
 									
 									}
 									
 						if(flag5){	HAL_GPIO_TogglePin(LED7_GPIO_Port,LED7_Pin);
 									HAL_GPIO_WritePin(KM5_GPIO_Port,KM5_Pin,GPIO_PIN_SET);
-									HAL_GPIO_TogglePin(BEE_GPIO_Port,BEE_Pin);
+									beep_flag=1;
 									
 									}
 									
 						if(flag6){	HAL_GPIO_TogglePin(LED8_GPIO_Port,LED8_Pin);
 									HAL_GPIO_WritePin(KM6_GPIO_Port,KM6_Pin,GPIO_PIN_SET);
-									HAL_GPIO_TogglePin(BEE_GPIO_Port,BEE_Pin);
+									beep_flag=1;
 									
 									}
 									
 						if(flag7){	HAL_GPIO_TogglePin(LED9_GPIO_Port,LED9_Pin);
 									HAL_GPIO_WritePin(KM7_GPIO_Port,KM7_Pin,GPIO_PIN_SET);
-									HAL_GPIO_TogglePin(BEE_GPIO_Port,BEE_Pin);
+									beep_flag=1;
 									
 									}
 									
 						if(flag8){	HAL_GPIO_TogglePin(LED10_GPIO_Port,LED10_Pin);
 									HAL_GPIO_WritePin(KM8_GPIO_Port,KM8_Pin,GPIO_PIN_SET);
-									HAL_GPIO_TogglePin(BEE_GPIO_Port,BEE_Pin);
+									beep_flag=1;
 									
 									}
-									
+						if(beep_flag)HAL_GPIO_TogglePin(BEE_GPIO_Port,BEE_Pin);
 						}
 	
 	
-	if(HAL_GPIO_ReadPin(K1_GPIO_Port,K1_Pin)){flag1=0;HAL_GPIO_WritePin(KM1_GPIO_Port,KM1_Pin,GPIO_PIN_RESET);}
-	if(HAL_GPIO_ReadPin(K2_GPIO_Port,K2_Pin)){flag2=0;HAL_GPIO_WritePin(KM1_GPIO_Port,KM1_Pin,GPIO_PIN_RESET);}					
-	if(HAL_GPIO_ReadPin(K3_GPIO_Port,K3_Pin)){flag3=0;HAL_GPIO_WritePin(KM1_GPIO_Port,KM1_Pin,GPIO_PIN_RESET);}
-	if(HAL_GPIO_ReadPin(K4_GPIO_Port,K4_Pin)){flag4=0;HAL_GPIO_WritePin(KM1_GPIO_Port,KM1_Pin,GPIO_PIN_RESET);}					
-	if(HAL_GPIO_ReadPin(K5_GPIO_Port,K5_Pin)){flag5=0;HAL_GPIO_WritePin(KM1_GPIO_Port,KM1_Pin,GPIO_PIN_RESET);}					
-	if(HAL_GPIO_ReadPin(K6_GPIO_Port,K6_Pin)){flag6=0;HAL_GPIO_WritePin(KM1_GPIO_Port,KM1_Pin,GPIO_PIN_RESET);}					
-	if(HAL_GPIO_ReadPin(K7_GPIO_Port,K7_Pin)){flag7=0;HAL_GPIO_WritePin(KM1_GPIO_Port,KM1_Pin,GPIO_PIN_RESET);}					
-	if(HAL_GPIO_ReadPin(K8_GPIO_Port,K8_Pin)){flag8=0;HAL_GPIO_WritePin(KM1_GPIO_Port,KM1_Pin,GPIO_PIN_RESET);}					
+	if(!HAL_GPIO_ReadPin(K1_GPIO_Port,K1_Pin)){flag1=0;HAL_GPIO_WritePin(KM1_GPIO_Port,KM1_Pin,GPIO_PIN_RESET);
+																						HAL_GPIO_WritePin(LED3_GPIO_Port,LED3_Pin,GPIO_PIN_RESET);
+																						beep_flag=0;HAL_GPIO_WritePin(BEE_GPIO_Port,BEE_Pin,GPIO_PIN_RESET);}
+	if(!HAL_GPIO_ReadPin(K2_GPIO_Port,K2_Pin)){flag2=0;HAL_GPIO_WritePin(KM1_GPIO_Port,KM1_Pin,GPIO_PIN_RESET);
+																						HAL_GPIO_WritePin(LED4_GPIO_Port,LED4_Pin,GPIO_PIN_RESET);
+																						beep_flag=0;HAL_GPIO_WritePin(BEE_GPIO_Port,BEE_Pin,GPIO_PIN_RESET);}					
+	if(!HAL_GPIO_ReadPin(K3_GPIO_Port,K3_Pin)){flag3=0;HAL_GPIO_WritePin(KM1_GPIO_Port,KM1_Pin,GPIO_PIN_RESET);
+																						HAL_GPIO_WritePin(LED5_GPIO_Port,LED5_Pin,GPIO_PIN_RESET);
+																						beep_flag=0;HAL_GPIO_WritePin(BEE_GPIO_Port,BEE_Pin,GPIO_PIN_RESET);}
+	if(!HAL_GPIO_ReadPin(K4_GPIO_Port,K4_Pin)){flag4=0;HAL_GPIO_WritePin(KM1_GPIO_Port,KM1_Pin,GPIO_PIN_RESET);
+																						HAL_GPIO_WritePin(LED6_GPIO_Port,LED6_Pin,GPIO_PIN_RESET);
+																						beep_flag=0;HAL_GPIO_WritePin(BEE_GPIO_Port,BEE_Pin,GPIO_PIN_RESET);}					
+	if(!HAL_GPIO_ReadPin(K5_GPIO_Port,K5_Pin)){flag5=0;HAL_GPIO_WritePin(KM1_GPIO_Port,KM1_Pin,GPIO_PIN_RESET);
+																						HAL_GPIO_WritePin(LED7_GPIO_Port,LED7_Pin,GPIO_PIN_RESET);
+																						beep_flag=0;HAL_GPIO_WritePin(BEE_GPIO_Port,BEE_Pin,GPIO_PIN_RESET);}					
+	if(!HAL_GPIO_ReadPin(K6_GPIO_Port,K6_Pin)){flag6=0;HAL_GPIO_WritePin(KM1_GPIO_Port,KM1_Pin,GPIO_PIN_RESET);
+																						HAL_GPIO_WritePin(LED8_GPIO_Port,LED8_Pin,GPIO_PIN_RESET);
+																						beep_flag=0;HAL_GPIO_WritePin(BEE_GPIO_Port,BEE_Pin,GPIO_PIN_RESET);}					
+	if(!HAL_GPIO_ReadPin(K7_GPIO_Port,K7_Pin)){flag7=0;HAL_GPIO_WritePin(KM1_GPIO_Port,KM1_Pin,GPIO_PIN_RESET);
+																						HAL_GPIO_WritePin(LED9_GPIO_Port,LED9_Pin,GPIO_PIN_RESET);
+																						beep_flag=0;HAL_GPIO_WritePin(BEE_GPIO_Port,BEE_Pin,GPIO_PIN_RESET);}					
+	if(!HAL_GPIO_ReadPin(K8_GPIO_Port,K8_Pin)){flag8=0;HAL_GPIO_WritePin(KM1_GPIO_Port,KM1_Pin,GPIO_PIN_RESET);
+																						HAL_GPIO_WritePin(LED10_GPIO_Port,LED10_Pin,GPIO_PIN_RESET);
+																						beep_flag=0;HAL_GPIO_WritePin(BEE_GPIO_Port,BEE_Pin,GPIO_PIN_RESET);}					
 }
 
 /* USER CODE END 4 */
