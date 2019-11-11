@@ -79,9 +79,10 @@ int connect_confirm =0; //定时发送消息确保连接
 int alarm_message = 0;
 int time_out=0;
 int filter_len=5;
-int filter_A =1;
+int limit_A =300;
 int filter_index = 0;
 int beep_flag=0;
+int led_flag=0;
 uint8_t input_read ;
 
 //struct {
@@ -268,8 +269,10 @@ static void MX_TIM1_Init(void);
 /* USER CODE BEGIN 0 */
 void SET4G(void);
 void sort(int* a,int len);
-void filter(int* a,int* b);
-
+int get_ADC(ADC_HandleTypeDef adc);
+void filter_A(int* a);
+int abs(int a);
+int filter_M(int *filter,int len);
 /* USER CODE END 0 */
 
 /**
@@ -346,7 +349,7 @@ int main(void)
   /* USER CODE BEGIN 3 */
 //********************************************************************ADC测试*****************************************************************//
 	
-//									for(j=0;j<4;j++){HAL_ADC_Start(&hadc1);
+//									HAL_ADC_Start(&hadc1);
 //									HAL_ADC_PollForConversion(&hadc1,0xffff);
 //									adc11[1]= HAL_ADC_GetValue(&hadc1);
 //									HAL_ADC_Start(&hadc1);
@@ -357,13 +360,13 @@ int main(void)
 //									adc31[1]= HAL_ADC_GetValue(&hadc1);
 //									HAL_ADC_Start(&hadc1);
 //									HAL_ADC_PollForConversion(&hadc1,0xffff);
-//									adc41[1]= HAL_ADC_GetValue(&hadc1);}
+//									adc41[1]= HAL_ADC_GetValue(&hadc1);
 //					
 //									HAL_ADC_Start(&hadc2);
 //									HAL_ADC_PollForConversion(&hadc2,0xffff);
 //									adc51[1]= HAL_ADC_GetValue(&hadc2);
 //									
-//									for(j=0;j<3;j++){HAL_ADC_Start(&hadc3);
+//									HAL_ADC_Start(&hadc3);
 //									HAL_ADC_PollForConversion(&hadc3,0xffff);
 //									adc61[1]= HAL_ADC_GetValue(&hadc3);
 //									HAL_ADC_Start(&hadc3);	
@@ -371,7 +374,7 @@ int main(void)
 //									adc71[1]= HAL_ADC_GetValue(&hadc3);
 //									HAL_ADC_Start(&hadc3);	
 //									HAL_ADC_PollForConversion(&hadc3,0xffff);
-//									adc81[1]= HAL_ADC_GetValue(&hadc3);}
+//									adc81[1]= HAL_ADC_GetValue(&hadc3);
 //									//delay_ms(1);
 //								printf("%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\r\n",adc11[1],adc21[1],adc31[1],adc41[1],adc51[1],adc61[1],adc71[1],adc81[1]);
 
@@ -425,173 +428,249 @@ int main(void)
 	  
 	  
 		sw=!sw;
-		//***************************************ADC采样*************************************************//		
-		if(sw){	for(i=0;i<1030;i++){for(k=0;k<filter_len;k++){HAL_ADC_Start(&hadc1);
-																								HAL_ADC_PollForConversion(&hadc1,0xffff);
-																								filter11[k]= HAL_ADC_GetValue(&hadc1);
-																								HAL_ADC_Start(&hadc1);
-																								HAL_ADC_PollForConversion(&hadc1,0xffff);
-																								filter21[k]= HAL_ADC_GetValue(&hadc1);
-																								HAL_ADC_Start(&hadc1);
-																								HAL_ADC_PollForConversion(&hadc1,0xffff);
-																								filter31[k]= HAL_ADC_GetValue(&hadc1);
-																								HAL_ADC_Start(&hadc1);
-																								HAL_ADC_PollForConversion(&hadc1,0xffff);
-																								filter41[k]= HAL_ADC_GetValue(&hadc1);
-													
-																								HAL_ADC_Start(&hadc2);
-																								HAL_ADC_PollForConversion(&hadc2,0xffff);
-																								filter51[k]= HAL_ADC_GetValue(&hadc2);
-																
-																								HAL_ADC_Start(&hadc3);
-																								HAL_ADC_PollForConversion(&hadc3,0xffff);
-																								filter61[k]= HAL_ADC_GetValue(&hadc3);
-																								HAL_ADC_Start(&hadc3);	
-																								HAL_ADC_PollForConversion(&hadc3,0xffff);
-																								filter71[k]= HAL_ADC_GetValue(&hadc3);
-																								HAL_ADC_Start(&hadc3);	
-																								HAL_ADC_PollForConversion(&hadc3,0xffff);
-																								filter81[k]= HAL_ADC_GetValue(&hadc3);}
-																//printf("**********1***********\r\n");
-																sort(filter11,filter_len);
-																sort(filter21,filter_len);								
-																sort(filter31,filter_len);								
-																sort(filter41,filter_len);								
-																sort(filter51,filter_len);								
-																sort(filter61,filter_len);								
-																sort(filter71,filter_len);								
-																sort(filter81,filter_len);
-																adc11[i]=filter11[filter_index];
-																adc21[i]=filter21[filter_index];									
-																adc31[i]=filter31[filter_index];								
-																adc41[i]=filter41[filter_index];								
-																adc51[i]=filter51[filter_index];								
-																adc61[i]=filter61[filter_index];								
-																adc71[i]=filter71[filter_index];								
-																adc81[i]=filter81[filter_index];
-																delay_us(20);
-				}}
-		else{for(i=0;i<1030;i++){for(k=0;k<filter_len;k++){HAL_ADC_Start(&hadc1);
-																							HAL_ADC_PollForConversion(&hadc1,0xffff);
-																							filter10[k]= HAL_ADC_GetValue(&hadc1);
-																							HAL_ADC_Start(&hadc1);
-																							HAL_ADC_PollForConversion(&hadc1,0xffff);
-																							filter20[k]= HAL_ADC_GetValue(&hadc1);
-																							HAL_ADC_Start(&hadc1);
-																							HAL_ADC_PollForConversion(&hadc1,0xffff);
-																							filter30[k]= HAL_ADC_GetValue(&hadc1);
-																							HAL_ADC_Start(&hadc1);
-																							HAL_ADC_PollForConversion(&hadc1,0xffff);
-																							filter40[k]= HAL_ADC_GetValue(&hadc1);
-									
-																							HAL_ADC_Start(&hadc2);
-																							HAL_ADC_PollForConversion(&hadc2,0xffff);
-																							filter50[k]= HAL_ADC_GetValue(&hadc2);
-									
-																							HAL_ADC_Start(&hadc3);
-																							HAL_ADC_PollForConversion(&hadc3,0xffff);
-																							filter60[k]= HAL_ADC_GetValue(&hadc3);
-																							HAL_ADC_Start(&hadc3);
-																							HAL_ADC_PollForConversion(&hadc3,0xffff);
-																							filter70[k]= HAL_ADC_GetValue(&hadc3);
-																							HAL_ADC_Start(&hadc3);
-																							HAL_ADC_PollForConversion(&hadc3,0xffff);
-																							filter80[k]= HAL_ADC_GetValue(&hadc3);}
+//		//***************************************ADC采样*************************************************//		
+//		if(sw){	for(i=0;i<1030;i++){for(k=0;k<filter_len;k++){
+//																								HAL_ADC_Start(&hadc1);
+//																								HAL_ADC_PollForConversion(&hadc1,0xffff);
+//																								filter11[k]= HAL_ADC_GetValue(&hadc1);
+//																								HAL_ADC_Start(&hadc1);
+//																								HAL_ADC_PollForConversion(&hadc1,0xffff);
+//																								filter21[k]= HAL_ADC_GetValue(&hadc1);
+//																								HAL_ADC_Start(&hadc1);
+//																								HAL_ADC_PollForConversion(&hadc1,0xffff);
+//																								filter31[k]= HAL_ADC_GetValue(&hadc1);
+//																								HAL_ADC_Start(&hadc1);
+//																								HAL_ADC_PollForConversion(&hadc1,0xffff);
+//																								filter41[k]= HAL_ADC_GetValue(&hadc1);
+//													
+//																								HAL_ADC_Start(&hadc2);
+//																								HAL_ADC_PollForConversion(&hadc2,0xffff);
+//																								filter51[k]= HAL_ADC_GetValue(&hadc2);
+//																
+//																								HAL_ADC_Start(&hadc3);
+//																								HAL_ADC_PollForConversion(&hadc3,0xffff);
+//																								filter61[k]= HAL_ADC_GetValue(&hadc3);
+//																								HAL_ADC_Start(&hadc3);	
+//																								HAL_ADC_PollForConversion(&hadc3,0xffff);
+//																								filter71[k]= HAL_ADC_GetValue(&hadc3);
+//																								HAL_ADC_Start(&hadc3);	
+//																								HAL_ADC_PollForConversion(&hadc3,0xffff);
+//																								filter81[k]= HAL_ADC_GetValue(&hadc3);}
+//																//printf("**********1***********\r\n");
+//																sort(filter11,filter_len);
+//																sort(filter21,filter_len);								
+//																sort(filter31,filter_len);								
+//																sort(filter41,filter_len);								
+//																sort(filter51,filter_len);								
+//																sort(filter61,filter_len);								
+//																sort(filter71,filter_len);								
+//																sort(filter81,filter_len);
+//																adc11[i]=filter11[filter_index];
+//																adc21[i]=filter21[filter_index];									
+//																adc31[i]=filter31[filter_index];								
+//																adc41[i]=filter41[filter_index];								
+//																adc51[i]=filter51[filter_index];								
+//																adc61[i]=filter61[filter_index];								
+//																adc71[i]=filter71[filter_index];								
+//																adc81[i]=filter81[filter_index];
+//																delay_us(20);
+//				}}
+//		else{for(i=0;i<1030;i++){for(k=0;k<filter_len;k++){HAL_ADC_Start(&hadc1);
+//																							HAL_ADC_PollForConversion(&hadc1,0xffff);
+//																							filter10[k]= HAL_ADC_GetValue(&hadc1);
+//																							HAL_ADC_Start(&hadc1);
+//																							HAL_ADC_PollForConversion(&hadc1,0xffff);
+//																							filter20[k]= HAL_ADC_GetValue(&hadc1);
+//																							HAL_ADC_Start(&hadc1);
+//																							HAL_ADC_PollForConversion(&hadc1,0xffff);
+//																							filter30[k]= HAL_ADC_GetValue(&hadc1);
+//																							HAL_ADC_Start(&hadc1);
+//																							HAL_ADC_PollForConversion(&hadc1,0xffff);
+//																							filter40[k]= HAL_ADC_GetValue(&hadc1);
+//									
+//																							HAL_ADC_Start(&hadc2);
+//																							HAL_ADC_PollForConversion(&hadc2,0xffff);
+//																							filter50[k]= HAL_ADC_GetValue(&hadc2);
+//									
+//																							HAL_ADC_Start(&hadc3);
+//																							HAL_ADC_PollForConversion(&hadc3,0xffff);
+//																							filter60[k]= HAL_ADC_GetValue(&hadc3);
+//																							HAL_ADC_Start(&hadc3);
+//																							HAL_ADC_PollForConversion(&hadc3,0xffff);
+//																							filter70[k]= HAL_ADC_GetValue(&hadc3);
+//																							HAL_ADC_Start(&hadc3);
+//																							HAL_ADC_PollForConversion(&hadc3,0xffff);
+//																							filter80[k]= HAL_ADC_GetValue(&hadc3);}
 
-																sort(filter10,filter_len);
-																sort(filter20,filter_len);								
-																sort(filter30,filter_len);								
-																sort(filter40,filter_len);								
-																sort(filter50,filter_len);								
-																sort(filter60,filter_len);								
-																sort(filter70,filter_len);								
-																sort(filter80,filter_len);
-																adc10[i]=filter10[filter_index];
-																adc20[i]=filter20[filter_index];									
-																adc30[i]=filter30[filter_index];								
-																adc40[i]=filter40[filter_index];								
-																adc50[i]=filter50[filter_index];								
-																adc60[i]=filter60[filter_index];								
-																adc70[i]=filter70[filter_index];								
-																adc80[i]=filter80[filter_index];	
-																delay_us(20);
-			}}
-		
-			
-       if(sw){printf("%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\r\n",Imax11/355,Imax21/355,Imax31/355,Imax41/355,Imax51/355,Imax61/355,Imax71/355,Imax81/355);}			
-									if(sw){	printf("*****************片段1*********************");   //测试采集到的adc数据
-											for(i=0;i<1024;i++){printf("%i\r\n",adc71[i]);}}	
-//									else{	printf("*****************片段0*********************");
+//																sort(filter10,filter_len);
+//																sort(filter20,filter_len);								
+//																sort(filter30,filter_len);								
+//																sort(filter40,filter_len);								
+//																sort(filter50,filter_len);								
+//																sort(filter60,filter_len);								
+//																sort(filter70,filter_len);								
+//																sort(filter80,filter_len);
+//																adc10[i]=filter10[filter_index];
+//																adc20[i]=filter20[filter_index];									
+//																adc30[i]=filter30[filter_index];								
+//																adc40[i]=filter40[filter_index];								
+//																adc50[i]=filter50[filter_index];								
+//																adc60[i]=filter60[filter_index];								
+//																adc70[i]=filter70[filter_index];								
+//																adc80[i]=filter80[filter_index];	
+//																delay_us(20);
+//			}}
+
+//			
+//       if(sw){printf("%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\r\n",Imax11/355,Imax21/355,Imax31/355,Imax41/355,Imax51/355,Imax61/355,Imax71/355,Imax81/355);}			
+//									if(sw){	printf("*****************片段1*********************");   //测试采集到的adc数据
+//											for(i=0;i<1024;i++){printf("%i\r\n",adc11[i]);}}	
+////									else{	printf("*****************片段0*********************");
 //											for(i=0;i<1024;i++){printf("%i\r\n",adc10[i]);}}
-									
 											
-		if(sw){	for(i=0;i<1030;i++){for(j=0;j<4;j++){HAL_ADC_Start(&hadc1);
-									HAL_ADC_PollForConversion(&hadc1,0xffff);
-									adc11[i]= HAL_ADC_GetValue(&hadc1);
-									HAL_ADC_Start(&hadc1);
-									HAL_ADC_PollForConversion(&hadc1,0xffff);
-									adc21[i]= HAL_ADC_GetValue(&hadc1);
-									HAL_ADC_Start(&hadc1);
-									HAL_ADC_PollForConversion(&hadc1,0xffff);
-									adc31[i]= HAL_ADC_GetValue(&hadc1);
-									HAL_ADC_Start(&hadc1);
-									HAL_ADC_PollForConversion(&hadc1,0xffff);
-									adc41[i]= HAL_ADC_GetValue(&hadc1);}
+//**************************************************************ADC采样2************************************************************//		
+		if(sw){	for(i=0;i<1030;i++){for(k=0;k<filter_len;k++){filter11[k]= get_ADC(hadc1);
+																													filter21[k]= get_ADC(hadc1);
+																													filter31[k]= get_ADC(hadc1);
+																													filter41[k]= get_ADC(hadc1);
+																													filter51[k]= get_ADC(hadc2);
+																													filter61[k]= get_ADC(hadc3);
+																													filter71[k]= get_ADC(hadc3);
+																													filter81[k]= get_ADC(hadc3);
+																													//printf("**%i\r\n",filter81[k]);
+																														}
+																adc11[i]=filter_M(filter11,filter_len);
+																adc21[i]=filter_M(filter21,filter_len);	
+																adc31[i]=filter_M(filter31,filter_len);
+																adc41[i]=filter_M(filter41,filter_len);		
+																adc51[i]=filter_M(filter51,filter_len);
+																adc61[i]=filter_M(filter61,filter_len);
+																adc71[i]=filter_M(filter71,filter_len);
+																adc81[i]=filter_M(filter81,filter_len);
+																//printf("***%i\r\n",adc81[i]);
+																delay_us(20);}
+					filter_A(adc11);
+					filter_A(adc21);
+					filter_A(adc31);				
+					filter_A(adc41);	
+					filter_A(adc51);
+					filter_A(adc61);
+					filter_A(adc71);
+					filter_A(adc81);
+																
+																
+																
+		}else{for(i=0;i<1030;i++){for(k=0;k<filter_len;k++){	filter10[k]= get_ADC(hadc1);
+																													filter20[k]= get_ADC(hadc1);
+																													filter30[k]= get_ADC(hadc1);
+																													filter40[k]= get_ADC(hadc1);
+																													filter50[k]= get_ADC(hadc2);
+																													filter60[k]= get_ADC(hadc3);
+																													filter70[k]= get_ADC(hadc3);
+																													filter80[k]= get_ADC(hadc3);	}
+																adc10[i]=filter_M(filter10,filter_len);
+																adc20[i]=filter_M(filter20,filter_len);	
+																adc30[i]=filter_M(filter30,filter_len);
+																adc40[i]=filter_M(filter40,filter_len);		
+																adc50[i]=filter_M(filter50,filter_len);
+																adc60[i]=filter_M(filter60,filter_len);
+																adc70[i]=filter_M(filter70,filter_len);
+																adc80[i]=filter_M(filter80,filter_len);
+																delay_us(20);}
+					filter_A(adc10);
+					filter_A(adc20);
+					filter_A(adc30);				
+					filter_A(adc40);	
+					filter_A(adc50);
+					filter_A(adc60);
+					filter_A(adc70);
+					filter_A(adc80);
+		}
+		
+//		if(sw){printf("**********************1**********************\r\n");
+//					for (i=0;i<1024;i++)printf("%i\r\n",adc11[i]);}
+//		else {printf("**********************0**********************\r\n");
+//					for (i=0;i<1024;i++)printf("%i\r\n",adc10[i]);}
 					
-									HAL_ADC_Start(&hadc2);
-									HAL_ADC_PollForConversion(&hadc2,0xffff);
-									adc51[i]= HAL_ADC_GetValue(&hadc2);
-									
-									for(j=0;j<3;j++){HAL_ADC_Start(&hadc3);
-									HAL_ADC_PollForConversion(&hadc3,0xffff);
-									adc61[i]= HAL_ADC_GetValue(&hadc3);
-									HAL_ADC_Start(&hadc3);	
-									HAL_ADC_PollForConversion(&hadc3,0xffff);
-									adc71[i]= HAL_ADC_GetValue(&hadc3);
-									HAL_ADC_Start(&hadc3);	
-									HAL_ADC_PollForConversion(&hadc3,0xffff);
-									adc81[i]= HAL_ADC_GetValue(&hadc3);}
-									delay_us(150);}
-		
-						filter(adc11,avg11);
-				}
-		else{for(i=0;i<1030;i++){HAL_ADC_Start(&hadc1);
-									HAL_ADC_PollForConversion(&hadc1,0xffff);
-									adc10[i]= HAL_ADC_GetValue(&hadc1);
-									HAL_ADC_Start(&hadc1);
-									HAL_ADC_PollForConversion(&hadc1,0xffff);
-									adc20[i]= HAL_ADC_GetValue(&hadc1);
-									HAL_ADC_Start(&hadc1);
-									HAL_ADC_PollForConversion(&hadc1,0xffff);
-									adc30[i]= HAL_ADC_GetValue(&hadc1);
-									HAL_ADC_Start(&hadc1);
-									HAL_ADC_PollForConversion(&hadc1,0xffff);
-									adc40[i]= HAL_ADC_GetValue(&hadc1);
-									
-									HAL_ADC_Start(&hadc2);
-									HAL_ADC_PollForConversion(&hadc2,0xffff);
-									adc50[i]= HAL_ADC_GetValue(&hadc2);
-									
-									HAL_ADC_Start(&hadc3);
-									HAL_ADC_PollForConversion(&hadc3,0xffff);
-									adc60[i]= HAL_ADC_GetValue(&hadc3);
-									HAL_ADC_Start(&hadc3);
-									HAL_ADC_PollForConversion(&hadc3,0xffff);
-									adc70[i]= HAL_ADC_GetValue(&hadc3);
-									HAL_ADC_Start(&hadc3);
-									HAL_ADC_PollForConversion(&hadc3,0xffff);
-									adc80[i]= HAL_ADC_GetValue(&hadc3);	
-									delay_us(150);
-									}}
-		
-							
-				
-									
-//****************************************************adc取滑动平均并放入input数组*********************************************************//		
+
+					//	printf("***************************************\r\n");
+//						if(flag2){for(i=0;i<1024;i++)printf("%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\r\n",
+//																			adc20[i],adc21[i],adc31[i],adc41[i],adc51[i],adc61[i],adc71[i],adc81[i]);}			
+//		
+
+
+
+
+											
+//											
+//		if(sw){	for(i=0;i<1030;i++){for(j=0;j<4;j++){HAL_ADC_Start(&hadc1);
+//									HAL_ADC_PollForConversion(&hadc1,0xffff);
+//									adc11[i]= HAL_ADC_GetValue(&hadc1);
+//									HAL_ADC_Start(&hadc1);
+//									HAL_ADC_PollForConversion(&hadc1,0xffff);
+//									adc21[i]= HAL_ADC_GetValue(&hadc1);
+//									HAL_ADC_Start(&hadc1);
+//									HAL_ADC_PollForConversion(&hadc1,0xffff);
+//									adc31[i]= HAL_ADC_GetValue(&hadc1);
+//									HAL_ADC_Start(&hadc1);
+//									HAL_ADC_PollForConversion(&hadc1,0xffff);
+//									adc41[i]= HAL_ADC_GetValue(&hadc1);}
+//					
+//									HAL_ADC_Start(&hadc2);
+//									HAL_ADC_PollForConversion(&hadc2,0xffff);
+//									adc51[i]= HAL_ADC_GetValue(&hadc2);
+//									
+//									for(j=0;j<3;j++){HAL_ADC_Start(&hadc3);
+//									HAL_ADC_PollForConversion(&hadc3,0xffff);
+//									adc61[i]= HAL_ADC_GetValue(&hadc3);
+//									HAL_ADC_Start(&hadc3);	
+//									HAL_ADC_PollForConversion(&hadc3,0xffff);
+//									adc71[i]= HAL_ADC_GetValue(&hadc3);
+//									HAL_ADC_Start(&hadc3);	
+//									HAL_ADC_PollForConversion(&hadc3,0xffff);
+//									adc81[i]= HAL_ADC_GetValue(&hadc3);}
+//									delay_us(150);}
+//		
+//						filter(adc11,avg11);
+//				}
+//		else{for(i=0;i<1030;i++){HAL_ADC_Start(&hadc1);
+//									HAL_ADC_PollForConversion(&hadc1,0xffff);
+//									adc10[i]= HAL_ADC_GetValue(&hadc1);
+//									HAL_ADC_Start(&hadc1);
+//									HAL_ADC_PollForConversion(&hadc1,0xffff);
+//									adc20[i]= HAL_ADC_GetValue(&hadc1);
+//									HAL_ADC_Start(&hadc1);
+//									HAL_ADC_PollForConversion(&hadc1,0xffff);
+//									adc30[i]= HAL_ADC_GetValue(&hadc1);
+//									HAL_ADC_Start(&hadc1);
+//									HAL_ADC_PollForConversion(&hadc1,0xffff);
+//									adc40[i]= HAL_ADC_GetValue(&hadc1);
+//									
+//									HAL_ADC_Start(&hadc2);
+//									HAL_ADC_PollForConversion(&hadc2,0xffff);
+//									adc50[i]= HAL_ADC_GetValue(&hadc2);
+//									
+//									HAL_ADC_Start(&hadc3);
+//									HAL_ADC_PollForConversion(&hadc3,0xffff);
+//									adc60[i]= HAL_ADC_GetValue(&hadc3);
+//									HAL_ADC_Start(&hadc3);
+//									HAL_ADC_PollForConversion(&hadc3,0xffff);
+//									adc70[i]= HAL_ADC_GetValue(&hadc3);
+//									HAL_ADC_Start(&hadc3);
+//									HAL_ADC_PollForConversion(&hadc3,0xffff);
+//									adc80[i]= HAL_ADC_GetValue(&hadc3);	
+//									delay_us(150);
+//									}}
+//		
+//							
+//				
+//									
+////****************************************************adc取滑动平均并放入input数组*********************************************************//		
 
 
 		if(sw){	for(i=0;i<1024;i++){input11[2*i]=avg11[i]=(adc11[i]+adc11[i+1]+adc11[i+2]+adc11[i+3]+adc11[i+4])/5.0;	input11[2*i+1]=0;
-									input21[2*i]=avg21[i];input21[2*i+1]=0;//=(adc21[i]+adc21[i+1]+adc21[i+2]+adc21[i+3]+adc21[i+4])/5.0;	
+																								//printf("%f",adc10[i]);
+									input21[2*i]=avg21[i]=(adc21[i]+adc21[i+1]+adc21[i+2]+adc21[i+3]+adc21[i+4])/5.0; input21[2*i+1]=0;
 									input31[2*i]=avg31[i]=(adc31[i]+adc31[i+1]+adc31[i+2]+adc31[i+3]+adc31[i+4])/5.0;	input31[2*i+1]=0;
 									input41[2*i]=avg41[i]=(adc41[i]+adc41[i+1]+adc41[i+2]+adc41[i+3]+adc41[i+4])/5.0;	input41[2*i+1]=0;
 									input51[2*i]=avg51[i]=(adc51[i]+adc51[i+1]+adc51[i+2]+adc51[i+3]+adc51[i+4])/5.0;	input51[2*i+1]=0;
@@ -628,6 +707,7 @@ int main(void)
 									}}
 		
 		else{for(i=0;i<1024;i++){	input10[2*i]=avg10[i]=(adc10[i]+adc10[i+1]+adc10[i+2]+adc10[i+3]+adc10[i+4])/5.0;	input10[2*i+1]=0;	
+																						//	printf("%i",adc10[i]);
 									input20[2*i]=avg20[i]=(adc20[i]+adc20[i+1]+adc20[i+2]+adc20[i+3]+adc20[i+4])/5.0;	input20[2*i+1]=0;
 									input30[2*i]=avg30[i]=(adc30[i]+adc30[i+1]+adc30[i+2]+adc30[i+3]+adc30[i+4])/5.0;	input30[2*i+1]=0;
 									input40[2*i]=avg40[i]=(adc40[i]+adc40[i+1]+adc40[i+2]+adc40[i+3]+adc40[i+4])/5.0;	input40[2*i+1]=0;
@@ -732,11 +812,11 @@ int main(void)
 				arm_cmplx_mag_f32(input80,output80,FFT_LENGTH);}
 					
 //		if(sw){	printf("**************************output1***********************\r\n");   //output 测试
-//				for(i=1;i<100;i++)printf("%f\r\n",output11[i]);}
+//				for(i=1;i<100;i++)printf("%f\r\n",output21[i]);}
 //				
 //		else if(start){ 
 //				printf("**************************output0***********************\r\n");
-//				for(i=1;i<100;i++)printf("%f\r\n",output10[i]);}			
+//				for(i=1;i<100;i++)printf("%f\r\n",output20[i]);}			
 ////****************************************************频谱取最大值**************************************//			
 			if(sw){	Imax11=Imax21=Imax31=Imax41=Imax51=Imax61=Imax71=Imax81=0;
 					for(i=1;i<100;i++){	if(output11[i]>Imax11)Imax11=output11[i];
@@ -748,7 +828,7 @@ int main(void)
 										if(output71[i]>Imax71)Imax71=output71[i];
 										if(output81[i]>Imax81)Imax81=output81[i];}}
 			else if(start){	Imax10=Imax20=Imax30=Imax40=Imax50=Imax60=Imax70=Imax80=0;
-							for(i=1;i<100;i++){	if(output10[i]>Imax10)Imax10=output10[i];
+					for(i=1;i<100;i++){	if(output10[i]>Imax10)Imax10=output10[i];
 												if(output20[i]>Imax20)Imax20=output20[i];
 												if(output30[i]>Imax30)Imax30=output30[i];
 												if(output40[i]>Imax40)Imax40=output40[i];
@@ -856,9 +936,12 @@ int main(void)
 						//HAL_GPIO_WritePin(RE_GPIO_Port,RE_Pin,GPIO_PIN_RESET);
 						time_out=0;}		
 					
-						
-						
-				
+//						
+//				if(1){for(i=0;i<1024;i++)printf("%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\r\n",
+//																			adc11[i],adc21[i],adc31[i],adc41[i],adc51[i],adc61[i],adc71[i],adc81[i]);}			
+
+//					if(sw){printf("%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\r\n",Imax11/355,Imax21/355,Imax31/355,Imax41/355,Imax51/355,Imax61/355,Imax71/355,Imax81/355);}			
+//					else{printf("%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\r\n",Imax10/355,Imax20/355,Imax30/355,Imax40/355,Imax50/355,Imax60/355,Imax70/355,Imax80/355);}
 		
 		start=1;
 	} 
@@ -1367,12 +1450,33 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 							
 }
 
+int abs(int a){if(a>=0)return a;else return -a;}
 //********************************************限幅***************************************//
-void filter(int* a,int* b) {
-		for(i=0;i<1024;i++){
-				while(1){if(((a[i] - a[i+1]) > filter_A) || ((a[i+1] - a[i]) > filter_A)){b[i]=a[i];break;}
-									else i+=1;}
-		}
+void filter_A(int * a){for(i=1;i<1020;i++){
+			if(abs(a[i]-a[i-1])>limit_A && abs(a[i]-a[i+1])>limit_A) a[i]=a[i-1];
+			if(abs(a[i]-a[i-1])>limit_A && abs(a[i+1]-a[i+2])>limit_A) a[i]=a[i+1]=a[i-1];
+			if(abs(a[i]-a[i-1])>limit_A && abs(a[i+3]-a[i+2])>limit_A) a[i+2]=a[i]=a[i+1]=a[i-1];
+}
+		
+
+
+}
+
+
+
+
+//****************************************get  ADC***************************************//
+int get_ADC(ADC_HandleTypeDef adc){
+			HAL_ADC_Start(&adc);
+			HAL_ADC_PollForConversion(&adc,0xffff);
+			return HAL_ADC_GetValue(&adc);
+}
+
+
+//*********************************************中值**************************************//
+int filter_M(int *filter,int len){
+	sort(filter,len);
+	return filter[len/2];
 }
  
 //******************************************排序************************************//
@@ -1412,9 +1516,9 @@ void SET4G(void){
 	printf("AT+CIPSEND=1,18,\"219.128.73.196\",20030\r\n");
 	delay_ms(300);
 	printf("4G模块初始化完成\r\n");
-	HAL_GPIO_TogglePin(BEE_GPIO_Port,BEE_Pin);
-	delay_ms(1000);
-	HAL_GPIO_TogglePin(BEE_GPIO_Port,BEE_Pin);
+//	HAL_GPIO_TogglePin(BEE_GPIO_Port,BEE_Pin);
+//	delay_ms(1000);
+//	HAL_GPIO_TogglePin(BEE_GPIO_Port,BEE_Pin);
 	
 }
  
@@ -1425,24 +1529,25 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	if(tim_count==1000){HAL_GPIO_TogglePin(LED2_GPIO_Port,LED2_Pin);tim_count=0;
 						time_out++;
 						connect_confirm++;
-						if(flag1){	HAL_GPIO_TogglePin(LED3_GPIO_Port,LED3_Pin);
+						led_flag=!led_flag;
+						if(flag1){	
 									HAL_GPIO_WritePin(KM1_GPIO_Port,KM1_Pin,GPIO_PIN_SET);
 									beep_flag=1;
 									}
 						
-						if(flag2){	HAL_GPIO_TogglePin(LED4_GPIO_Port,LED4_Pin);
+						if(flag2){	
 									HAL_GPIO_WritePin(KM2_GPIO_Port,KM2_Pin,GPIO_PIN_SET);
 									beep_flag=1;
 									
 									}
 									
-						if(flag3){	HAL_GPIO_TogglePin(LED5_GPIO_Port,LED5_Pin);
+						if(flag3){	
 									HAL_GPIO_WritePin(KM3_GPIO_Port,KM3_Pin,GPIO_PIN_SET);
 									beep_flag=1;
 									
 									}
 									
-						if(flag4){	HAL_GPIO_TogglePin(LED6_GPIO_Port,LED6_Pin);
+						if(flag4){	
 									HAL_GPIO_WritePin(KM4_GPIO_Port,KM4_Pin,GPIO_PIN_SET);
 									beep_flag=1;
 									
@@ -1471,6 +1576,23 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 									beep_flag=1;
 									
 									}
+						
+						if(led_flag){if(flag1)HAL_GPIO_WritePin(LED3_GPIO_Port,LED3_Pin,GPIO_PIN_SET);
+									if(flag2)HAL_GPIO_WritePin(LED4_GPIO_Port,LED4_Pin,GPIO_PIN_SET);
+									if(flag3)HAL_GPIO_WritePin(LED5_GPIO_Port,LED5_Pin,GPIO_PIN_SET);
+									if(flag4)HAL_GPIO_WritePin(LED6_GPIO_Port,LED6_Pin,GPIO_PIN_SET);
+									if(flag5)HAL_GPIO_WritePin(LED7_GPIO_Port,LED7_Pin,GPIO_PIN_SET);
+									if(flag6)HAL_GPIO_WritePin(LED8_GPIO_Port,LED8_Pin,GPIO_PIN_SET);
+									if(flag7)HAL_GPIO_WritePin(LED9_GPIO_Port,LED9_Pin,GPIO_PIN_SET);
+									if(flag8)HAL_GPIO_WritePin(LED10_GPIO_Port,LED10_Pin,GPIO_PIN_SET);}
+						else{ if(flag1)HAL_GPIO_WritePin(LED3_GPIO_Port,LED3_Pin,GPIO_PIN_RESET);
+									if(flag2)HAL_GPIO_WritePin(LED4_GPIO_Port,LED4_Pin,GPIO_PIN_RESET);
+									if(flag3)HAL_GPIO_WritePin(LED5_GPIO_Port,LED5_Pin,GPIO_PIN_RESET);
+									if(flag4)HAL_GPIO_WritePin(LED6_GPIO_Port,LED6_Pin,GPIO_PIN_RESET);
+									if(flag5)HAL_GPIO_WritePin(LED7_GPIO_Port,LED7_Pin,GPIO_PIN_RESET);
+									if(flag6)HAL_GPIO_WritePin(LED8_GPIO_Port,LED8_Pin,GPIO_PIN_RESET);
+									if(flag7)HAL_GPIO_WritePin(LED9_GPIO_Port,LED9_Pin,GPIO_PIN_RESET);
+									if(flag8)HAL_GPIO_WritePin(LED10_GPIO_Port,LED10_Pin,GPIO_PIN_RESET);}			
 						if(beep_flag)HAL_GPIO_TogglePin(BEE_GPIO_Port,BEE_Pin);
 						}
 	
